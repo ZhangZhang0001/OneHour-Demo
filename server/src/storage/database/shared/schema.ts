@@ -34,6 +34,20 @@ export const equipmentInspections = pgTable(
   ]
 )
 
+// 匿名反馈表
+export const feedback = pgTable(
+  "feedback",
+  {
+    id: serial().primaryKey(),
+    content: text("content").notNull(),
+    type: varchar("type", { length: 50 }).notNull().default("suggestion"),
+    created_at: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [
+    index("feedback_created_at_idx").on(table.created_at),
+  ]
+)
+
 export const healthCheck = pgTable("health_check", {
 	id: serial().notNull(),
 	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'string' }).defaultNow(),

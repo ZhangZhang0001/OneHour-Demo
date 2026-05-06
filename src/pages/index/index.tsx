@@ -3,7 +3,10 @@ import { View, Text, ScrollView } from '@tarojs/components'
 import { Network } from '@/network'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { BookOpen, Wrench, Plus, ArrowRight, Clock } from 'lucide-react-taro'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { Button } from '@/components/ui/button'
+import { Textarea } from '@/components/ui/textarea'
+import { BookOpen, Wrench, Plus, ArrowRight, Clock, MessageSquare } from 'lucide-react-taro'
 import Taro from '@tarojs/taro'
 import './index.css'
 
@@ -21,6 +24,10 @@ export default function Index() {
     pendingCount: 0
   })
   const [recentInspections, setRecentInspections] = useState<RecentInspection[]>([])
+  const [showFeedbackDialog, setShowFeedbackDialog] = useState(false)
+  const [feedbackContent, setFeedbackContent] = useState('')
+  const [feedbackType, setFeedbackType] = useState('suggestion')
+  const [submitting, setSubmitting] = useState(false)
 
   useEffect(() => {
     fetchData()
@@ -28,17 +35,14 @@ export default function Index() {
 
   const fetchData = async () => {
     try {
-      // 获取培训资料数量
       const trainingRes = await Network.request({ url: '/api/training/count' })
       console.log('培训资料数量响应:', trainingRes.data)
       const trainingCount = trainingRes.data?.data?.count || 0
 
-      // 获取待巡检数量
       const pendingRes = await Network.request({ url: '/api/inspection/pending-count' })
       console.log('待巡检数量响应:', pendingRes.data)
       const pendingCount = pendingRes.data?.data?.count || 0
 
-      // 获取最近巡检记录
       const recentRes = await Network.request({ url: '/api/inspection/recent' })
       console.log('最近巡检记录响应:', recentRes.data)
       const recentList = recentRes.data?.data?.inspections || []
@@ -65,6 +69,45 @@ export default function Index() {
     return `${date.getMonth() + 1}/${date.getDate()} ${date.getHours()}:${String(date.getMinutes()).padStart(2, '0')}`
   }
 
+  const handleSubmitFeedback = async () => {
+    if (!feedbackContent.trim()) {
+      Taro.showToast({ title: '请输入反馈内容', icon: 'none' })
+      return
+    }
+
+    if (feedbackContent.length > 500) {
+      Taro.showToast({ title: '反馈内容不能超过500字', icon: 'none' })
+      return
+    }
+
+    setSubmitting(true)
+    try {
+      const res = await Network.request({
+        url: '/api/feedback/submit',
+        method: 'POST',
+        data: {
+          content: feedbackContent.trim(),
+          type: feedbackType
+        }
+      })
+      console.log('提交反馈响应:', res.data)
+
+      if (res.data?.code === 200) {
+        Taro.showToast({ title: '提交成功，感谢您的反馈！', icon: 'success' })
+        setShowFeedbackDialog(false)
+        setFeedbackContent('')
+        setFeedbackType('suggestion')
+      } else {
+        Taro.showToast({ title: res.data?.msg || '提交失败', icon: 'none' })
+      }
+    } catch (error) {
+      console.error('提交反馈失败:', error)
+      Taro.showToast({ title: '提交失败，请稍后重试', icon: 'none' })
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
   const menuItems = [
     {
       title: '培训资料',
@@ -80,6 +123,12 @@ export default function Index() {
       path: '/pages/inspection/index',
       bgColor: 'bg-blue-50'
     }
+  ]
+
+  const feedbackTypes = [
+    { value: 'suggestion', label: '建议' },
+    { value: 'need', label: '需求' },
+    { value: 'problem', label: '问题' }
   ]
 
   return (
@@ -142,8 +191,24 @@ export default function Index() {
           ))}
         </View>
 
+        {/* 匿名反馈入口 */}
+        <Card onClick={() => setShowFeedbackDialog(true)}>
+          <CardContent className="p-4">
+            <View className="flex items-center gap-4">
+              <View className="w-14 h-14 rounded-xl bg-purple-50 flex items-center justify-center">
+                <MessageSquare size={24} color="#7c3aed" />
+              </View>
+              <View className="flex-1">
+                <Text className="block text-base font-medium text-slate-800">匿名反馈</Text>
+                <Text className="block text-sm text-slate-500 mt-1">匿名提出建议或需求</Text>
+              </View>
+              <ArrowRight size={20} color="#94a3b8" />
+            </View>
+          </CardContent>
+        </Card>
+
         {/* 最近巡检记录 */}
-        <View className="flex items-center justify-between mb-3">
+        <View className="flex items-center justify-between mt-6 mb-3">
           <Text className="block text-lg font-semibold text-slate-800">最近巡检</Text>
           <View 
             className="flex items-center gap-1 text-blue-600" 
@@ -188,6 +253,84 @@ export default function Index() {
           </Card>
         )}
       </ScrollView>
+
+      {/* 匿名反馈弹窗 */}
+      <Dialog 
+        open={showFeedbackDialog} 
+        onOpenChange={(open) => setShowFeedbackDialog(open)}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>匿名反馈</DialogTitle>
+          </DialogHeader>
+          <View className="space-y-4">
+            <View>
+              <Text className="block text-sm font-medium text-slate-700 mb-2">反馈类型</Text>
+              <View className="flex gap-2">
+                {feedbackTypes.map((type) => (
+                  <View
+                    key={type.value}
+                    onClick={() => setFeedbackType(type.value)}
+                    className={`px-4 py-2 rounded-full text-sm ${
+                      feedbackType === type.value 
+                        ? 'bg-purple-600 text-white' 
+                        : 'bg-slate-100 text-slate-600'
+                    }`}
+                  >
+                    <Text className="block">{type.label}</Text>
+                  </View>
+                ))}
+              </View>
+            </View>
+
+            <View>
+              <Text className="block text-sm font-medium text-slate-700 mb-2">反馈内容</Text>
+              <View className="bg-slate-50 rounded-xl p-3">
+                <Textarea
+                  style={{ width: '100%', minHeight: '120px', backgroundColor: 'transparent' }}
+                  placeholder="请输入您的反馈内容（建议、需求、问题等）..."
+                  maxlength={500}
+                  value={feedbackContent}
+                  onInput={(e: any) => setFeedbackContent(e.detail.value)}
+                />
+              </View>
+              <Text className="block text-xs text-slate-400 mt-1 text-right">
+                {feedbackContent.length}/500
+              </Text>
+            </View>
+
+            <View className="flex items-center gap-2 bg-purple-50 rounded-lg p-3">
+              <View className="w-4 h-4 rounded-full bg-purple-600 flex items-center justify-center">
+                <Text className="text-white text-xs">!</Text>
+              </View>
+              <Text className="block text-xs text-purple-700">
+                此反馈完全匿名，不会收集任何个人信息
+              </Text>
+            </View>
+
+            <View className="flex gap-3 pt-2">
+              <View className="flex-1">
+                <Button 
+                  variant="outline" 
+                  className="w-full"
+                  onClick={() => setShowFeedbackDialog(false)}
+                >
+                  取消
+                </Button>
+              </View>
+              <View className="flex-1">
+                <Button 
+                  className="w-full bg-purple-600 hover:bg-purple-700"
+                  disabled={submitting}
+                  onClick={handleSubmitFeedback}
+                >
+                  <Text className="text-white">{submitting ? '提交中...' : '提交'}</Text>
+                </Button>
+              </View>
+            </View>
+          </View>
+        </DialogContent>
+      </Dialog>
     </View>
   )
 }
