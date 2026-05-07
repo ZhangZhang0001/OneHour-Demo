@@ -201,7 +201,7 @@ export default function TrainingList() {
         ) : filteredMaterials.length > 0 ? (
           <View className="space-y-3">
             {filteredMaterials.map((material) => (
-              <Card key={material.id} onClick={() => handleViewMaterial(material)}>
+              <Card key={material.id} className="w-full" onClick={() => handleViewMaterial(material)}>
                 <CardContent className="p-4">
                   <View className="flex items-start gap-3">
                     <View className="w-12 h-12 rounded-xl bg-blue-50 flex items-center justify-center flex-shrink-0">

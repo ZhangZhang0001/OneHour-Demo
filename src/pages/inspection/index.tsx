@@ -124,8 +124,9 @@ export default function InspectionList() {
         ) : filteredInspections.length > 0 ? (
           <View className="space-y-3">
             {filteredInspections.map((inspection) => (
-              <Card 
-                key={inspection.id} 
+              <Card
+                className="w-full"
+                key={inspection.id}
                 onClick={() => Taro.navigateTo({ url: `/pages/inspection/detail?id=${inspection.id}` })}
               >
                 <CardContent className="p-4">

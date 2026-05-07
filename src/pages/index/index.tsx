@@ -169,7 +169,7 @@ export default function Index() {
         <Text className="block text-lg font-semibold text-slate-800 mb-3">快捷功能</Text>
         <View className="space-y-3 mb-6">
           {menuItems.map((item) => (
-            <Card key={item.title} onClick={() => Taro.switchTab({ url: item.path })}>
+            <Card key={item.title} className="w-full" onClick={() => Taro.switchTab({ url: item.path })}>
               <CardContent className="p-4">
                 <View className="flex items-center gap-4">
                   <View className={`w-14 h-14 rounded-xl ${item.bgColor} flex items-center justify-center`}>
@@ -187,7 +187,7 @@ export default function Index() {
         </View>
 
         {/* 匿名反馈入口 */}
-        <Card onClick={() => setShowFeedbackDialog(true)}>
+        <Card className="w-full" onClick={() => setShowFeedbackDialog(true)}>
           <CardContent className="p-4">
             <View className="flex items-center gap-4">
               <View className="w-14 h-14 rounded-xl bg-purple-50 flex items-center justify-center">
@@ -245,7 +245,7 @@ export default function Index() {
             </View>
           </ScrollView>
         ) : (
-          <Card className="mb-6">
+          <Card className="w-full mb-6">
             <CardContent className="p-6 text-center">
               <CircleCheck size={32} color="#22c55e" className="mx-auto mb-2" />
               <Text className="block text-slate-600">太棒了！今日巡检已全部完成</Text>
