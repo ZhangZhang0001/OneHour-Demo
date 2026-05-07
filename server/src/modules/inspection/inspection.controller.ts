@@ -1,108 +1,99 @@
-import { Controller, Get, Post, Body } from '@nestjs/common';
-import { getSupabaseClient } from '@/storage/database/supabase-client';
+import { Controller, Get, Post, Body, Param, Query } from '@nestjs/common';
+import { InspectionService } from './inspection.service';
 
 @Controller('inspection')
 export class InspectionController {
-  // 获取巡检记录列表
-  @Get('list')
-  async getList() {
-    const client = getSupabaseClient();
-    const { data, error } = await client
-      .from('equipment_inspections')
-      .select('id, equipment_name, status, remark, inspector, created_at')
-      .order('created_at', { ascending: false });
-    
-    if (error) {
-      console.error('获取巡检记录列表失败:', error);
-      throw new Error(`获取列表失败: ${error.message}`);
-    }
-    
-    return { code: 200, msg: 'success', data: { inspections: data || [] } };
+  constructor(private readonly inspectionService: InspectionService) {}
+
+  // 获取器械列表（按区域分组）
+  @Get('equipment-list')
+  async getEquipmentList() {
+    const data = await this.inspectionService.getEquipmentList();
+    return { code: 200, msg: 'success', data };
   }
 
-  // 获取待巡检数量
-  @Get('pending-count')
-  async getPendingCount() {
-    const client = getSupabaseClient();
-    const { count, error } = await client
-      .from('equipment_inspections')
-      .select('*', { count: 'exact', head: true })
-      .eq('status', 'pending');
-    
-    if (error) {
-      console.error('获取待巡检数量失败:', error);
-      throw new Error(`获取数量失败: ${error.message}`);
-    }
-    
-    return { code: 200, msg: 'success', data: { count: count || 0 } };
+  // 初始化默认器械
+  @Post('init-equipment')
+  async initEquipment() {
+    const result = await this.inspectionService.initDefaultEquipment();
+    return { code: 200, msg: 'success', data: result };
+  }
+
+  // 获取巡检记录列表
+  @Get('list')
+  async getList(@Query('area') area?: string, @Query('status') status?: string) {
+    const data = await this.inspectionService.getInspectionList(area, status);
+    return { code: 200, msg: 'success', data: { inspections: data } };
+  }
+
+  // 获取待巡检器械
+  @Get('pending-equipment')
+  async getPendingEquipment() {
+    const data = await this.inspectionService.getPendingInspections();
+    return { code: 200, msg: 'success', data: { inspections: data } };
+  }
+
+  // 获取未巡检的器械
+  @Get('uninspected')
+  async getUninspected() {
+    const data = await this.inspectionService.getUninspectedEquipment();
+    return { code: 200, msg: 'success', data: { equipment: data } };
   }
 
   // 获取最近巡检记录
   @Get('recent')
-  async getRecent() {
-    const client = getSupabaseClient();
-    const { data, error } = await client
-      .from('equipment_inspections')
-      .select('id, equipment_name, status, inspector, created_at')
-      .order('created_at', { ascending: false })
-      .limit(5);
-    
-    if (error) {
-      console.error('获取最近巡检记录失败:', error);
-      throw new Error(`获取记录失败: ${error.message}`);
-    }
-    
-    return { code: 200, msg: 'success', data: { inspections: data || [] } };
+  async getRecent(@Query('limit') limit?: string) {
+    const data = await this.inspectionService.getRecentInspections(
+      limit ? parseInt(limit, 10) : 5
+    );
+    return { code: 200, msg: 'success', data: { inspections: data } };
+  }
+
+  // 获取统计数据
+  @Get('stats')
+  async getStats() {
+    const data = await this.inspectionService.getStats();
+    return { code: 200, msg: 'success', data };
+  }
+
+  // 获取待巡检数量（待维修+故障）
+  @Get('pending-count')
+  async getPendingCount() {
+    const data = await this.inspectionService.getStats();
+    return { code: 200, msg: 'success', data: { count: data.pending } };
   }
 
   // 新增巡检记录
   @Post('add')
   async add(@Body() body: {
     equipment_name: string;
+    equipment_id?: number;
+    area: string;
     status: 'normal' | 'pending' | 'fault';
     remark?: string;
     inspector: string;
   }) {
-    const client = getSupabaseClient();
-    
-    const { data, error } = await client
-      .from('equipment_inspections')
-      .insert({
-        equipment_name: body.equipment_name,
-        status: body.status,
-        remark: body.remark || '',
-        inspector: body.inspector,
-      })
-      .select()
-      .single();
-    
-    if (error) {
-      console.error('新增巡检记录失败:', error);
-      throw new Error(`新增记录失败: ${error.message}`);
-    }
-    
-    return { code: 200, msg: '新增成功', data: { inspection: data } };
+    const data = await this.inspectionService.addInspection(body);
+    return { code: 200, msg: 'success', data };
   }
 
   // 获取巡检详情
-  @Post('detail')
-  async getDetail(@Body() body: { id: number }) {
-    const client = getSupabaseClient();
-    const { data, error } = await client
-      .from('equipment_inspections')
-      .select('id, equipment_name, status, remark, inspector, created_at')
-      .eq('id', body.id)
-      .maybeSingle();
-    
-    if (error) {
-      console.error('获取巡检详情失败:', error);
-      throw new Error(`获取详情失败: ${error.message}`);
-    }
-    
-    if (!data) {
-      return { code: 404, msg: '记录不存在', data: null };
-    }
-    
-    return { code: 200, msg: 'success', data: { inspection: data } };
+  @Get('detail/:id')
+  async getDetail(@Param('id') id: string) {
+    const data = await this.inspectionService.getInspectionDetail(parseInt(id, 10));
+    return { code: 200, msg: 'success', data };
+  }
+
+  // 更新巡检状态
+  @Post('update-status/:id')
+  async updateStatus(
+    @Param('id') id: string,
+    @Body() body: { status: string }
+  ) {
+    const data = await this.inspectionService.updateInspectionStatus(
+      parseInt(id, 10),
+      body.status
+    );
+    return { code: 200, msg: 'success', data };
   }
 }

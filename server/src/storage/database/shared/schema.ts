@@ -17,12 +17,28 @@ export const trainingMaterials = pgTable(
   ]
 )
 
+// 器械设备表
+export const equipmentList = pgTable(
+  "equipment_list",
+  {
+    id: serial().primaryKey(),
+    name: varchar("name", { length: 255 }).notNull(),
+    area: varchar("area", { length: 10 }).notNull().default("A"), // A/B/C 区域
+    created_at: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [
+    index("equipment_list_area_idx").on(table.area),
+  ]
+)
+
 // 器械巡检记录表
 export const equipmentInspections = pgTable(
   "equipment_inspections",
   {
     id: serial().primaryKey(),
     equipment_name: varchar("equipment_name", { length: 255 }).notNull(),
+    equipment_id: serial("equipment_id").references(() => equipmentList.id),
+    area: varchar("area", { length: 10 }).notNull().default("A"), // A/B/C 区域
     status: varchar("status", { length: 20 }).notNull().default("normal"),
     remark: text("remark"),
     inspector: varchar("inspector", { length: 100 }).notNull(),
@@ -30,6 +46,7 @@ export const equipmentInspections = pgTable(
   },
   (table) => [
     index("equipment_inspections_status_idx").on(table.status),
+    index("equipment_inspections_area_idx").on(table.area),
     index("equipment_inspections_created_at_idx").on(table.created_at),
   ]
 )
