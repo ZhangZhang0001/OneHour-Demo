@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
-import { BookOpen, Wrench, Plus, ArrowRight, Clock, MessageSquare } from 'lucide-react-taro'
+import { BookOpen, Wrench, ArrowRight, Clock, MessageSquare, CircleAlert, CircleCheck } from 'lucide-react-taro'
 import Taro from '@tarojs/taro'
 import './index.css'
 
@@ -15,6 +15,7 @@ interface RecentInspection {
   equipment_name: string
   status: 'normal' | 'pending' | 'fault'
   inspector: string
+  remark: string
   created_at: string
 }
 
@@ -43,12 +44,13 @@ export default function Index() {
       console.log('待巡检数量响应:', pendingRes.data)
       const pendingCount = pendingRes.data?.data?.count || 0
 
-      const recentRes = await Network.request({ url: '/api/inspection/recent' })
-      console.log('最近巡检记录响应:', recentRes.data)
-      const recentList = recentRes.data?.data?.inspections || []
+      // 获取未巡检列表（待维修+故障）
+      const pendingListRes = await Network.request({ url: '/api/inspection/list?status=pending,fault' })
+      console.log('未巡检列表响应:', pendingListRes.data)
+      const pendingList = pendingListRes.data?.data?.inspections || []
 
       setStats({ trainingCount, pendingCount })
-      setRecentInspections(recentList)
+      setRecentInspections(pendingList)
     } catch (error) {
       console.error('获取数据失败:', error)
     }
@@ -174,7 +176,7 @@ export default function Index() {
         <Text className="block text-lg font-semibold text-slate-800 mb-3">快捷功能</Text>
         <View className="space-y-3 mb-6">
           {menuItems.map((item) => (
-            <Card key={item.title} onClick={() => Taro.navigateTo({ url: item.path })}>
+            <Card key={item.title} onClick={() => Taro.switchTab({ url: item.path })}>
               <CardContent className="p-4">
                 <View className="flex items-center gap-4">
                   <View className={`w-14 h-14 rounded-xl ${item.bgColor} flex items-center justify-center`}>
@@ -207,9 +209,14 @@ export default function Index() {
           </CardContent>
         </Card>
 
-        {/* 最近巡检记录 */}
+        {/* 未巡检提醒 */}
         <View className="flex items-center justify-between mt-6 mb-3">
-          <Text className="block text-lg font-semibold text-slate-800">最近巡检</Text>
+          <View className="flex items-center gap-2">
+            <Text className="block text-lg font-semibold text-slate-800">未巡检提醒</Text>
+            {stats.pendingCount > 0 && (
+              <Badge className="bg-red-500 text-white">{stats.pendingCount}</Badge>
+            )}
+          </View>
           <View 
             className="flex items-center gap-1 text-blue-600" 
             onClick={() => Taro.switchTab({ url: '/pages/inspection/index' })}
@@ -220,35 +227,33 @@ export default function Index() {
         </View>
 
         {recentInspections.length > 0 ? (
-          <View className="space-y-3">
-            {recentInspections.slice(0, 3).map((item) => (
-              <Card key={item.id}>
-                <CardContent className="p-4">
-                  <View className="flex items-center justify-between">
-                    <View className="flex-1">
-                      <Text className="block text-base font-medium text-slate-800">{item.equipment_name}</Text>
-                      <View className="flex items-center gap-2 mt-1">
-                        <Clock size={12} color="#94a3b8" />
-                        <Text className="block text-xs text-slate-400">{formatDate(item.created_at)}</Text>
-                      </View>
+          <ScrollView scrollX className="mb-6" style={{ display: 'flex', flexDirection: 'row' }}>
+            <View className="flex gap-3">
+              {recentInspections.map((item) => (
+                <Card key={item.id} className="w-56 flex-shrink-0">
+                  <CardContent className="p-4">
+                    <View className="flex items-center gap-2 mb-2">
+                      <CircleAlert size={16} color={item.status === 'fault' ? '#ef4444' : '#f97316'} />
+                      {getStatusBadge(item.status)}
                     </View>
-                    {getStatusBadge(item.status)}
-                  </View>
-                </CardContent>
-              </Card>
-            ))}
-          </View>
+                    <Text className="block text-base font-medium text-slate-800">{item.equipment_name}</Text>
+                    {item.remark && (
+                      <Text className="block text-xs text-slate-400 mt-1 truncate">{item.remark}</Text>
+                    )}
+                    <View className="flex items-center gap-1 mt-2">
+                      <Clock size={10} color="#94a3b8" />
+                      <Text className="block text-xs text-slate-400">{formatDate(item.created_at)}</Text>
+                    </View>
+                  </CardContent>
+                </Card>
+              ))}
+            </View>
+          </ScrollView>
         ) : (
-          <Card>
-            <CardContent className="p-8 text-center">
-              <Text className="block text-slate-400">暂无巡检记录</Text>
-              <View 
-                className="mt-3 inline-flex items-center gap-1 text-blue-600"
-                onClick={() => Taro.navigateTo({ url: '/pages/inspection/add' })}
-              >
-                <Plus size={14} color="#2563eb" />
-                <Text className="block text-sm">添加第一条记录</Text>
-              </View>
+          <Card className="mb-6">
+            <CardContent className="p-6 text-center">
+              <CircleCheck size={32} color="#22c55e" className="mx-auto mb-2" />
+              <Text className="block text-slate-600">太棒了！暂无未巡检器械</Text>
             </CardContent>
           </Card>
         )}
