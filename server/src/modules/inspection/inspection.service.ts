@@ -7,6 +7,15 @@ export class InspectionService {
     return getSupabaseClient(); // 无参数时使用 service_role_key
   }
 
+  // 获取当天日期 YYYY-MM-DD
+  private getToday() {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }
+
   // 获取器械列表（按区域分组）
   async getEquipmentList() {
     const result = await this.supabase
@@ -118,34 +127,75 @@ export class InspectionService {
     return result.data || [];
   }
 
-  // 获取未巡检的器械（巡检表中没有记录的器械）
-  async getUninspectedEquipment() {
-    // 获取所有已巡检的器械ID
-    const inspectedResult = await this.supabase
+  // 获取今天未巡检的器械
+  async getTodayUninspected() {
+    const today = this.getToday();
+    
+    // 获取今天已巡检的器械ID
+    const todayInspected = await this.supabase
       .from('equipment_inspections')
-      .select('equipment_id');
+      .select('equipment_id')
+      .eq('inspection_date', today);
 
-    const inspectedIds = inspectedResult.data?.map(item => item.equipment_id).filter(Boolean) || [];
+    const todayInspectedIds = todayInspected.data?.map(item => item.equipment_id).filter(Boolean) || [];
 
     // 获取所有器械
-    const allEquipmentResult = await this.supabase
+    const allEquipment = await this.supabase
       .from('equipment_list')
       .select('*')
-      .orderBy('area');
+      .order('area')
+      .order('name');
 
-    // 过滤出未巡检的器械
-    const uninspected = allEquipmentResult.data?.filter(
-      item => !inspectedIds.includes(item.id)
+    // 过滤出今天未巡检的器械
+    const uninspected = allEquipment.data?.filter(
+      item => !todayInspectedIds.includes(item.id)
     ) || [];
 
     return uninspected;
   }
 
+  // 获取今天未巡检数量
+  async getTodayUninspectedCount() {
+    const uninspected = await this.getTodayUninspected();
+    return {
+      count: uninspected.length,
+      list: uninspected.slice(0, 5), // 返回前5个用于展示
+    };
+  }
+
+  // 每日重置：删除昨天的巡检记录，为新的一天做准备
+  async resetDailyInspection() {
+    const today = this.getToday();
+    
+    // 获取昨天的日期
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    const yYear = yesterday.getFullYear();
+    const yMonth = String(yesterday.getMonth() + 1).padStart(2, '0');
+    const yDay = String(yesterday.getDate()).padStart(2, '0');
+    const yesterdayStr = `${yYear}-${yMonth}-${yDay}`;
+
+    // 删除昨天的巡检记录
+    const deleteResult = await this.supabase
+      .from('equipment_inspections')
+      .delete()
+      .neq('inspection_date', today); // 删除所有不是今天的记录
+
+    return {
+      success: true,
+      today,
+      message: `已重置巡检状态，今日需巡检 ${await this.getTodayUninspectedCount().then(r => r.count)} 台器械`,
+    };
+  }
+
   // 获取最近巡检记录
   async getRecentInspections(limit: number = 5) {
+    const today = this.getToday();
+    
     const result = await this.supabase
       .from('equipment_inspections')
       .select('*')
+      .eq('inspection_date', today)
       .order('created_at', { ascending: false })
       .limit(limit);
     
@@ -154,18 +204,33 @@ export class InspectionService {
 
   // 获取统计数据
   async getStats() {
+    const today = this.getToday();
+    
     const totalResult = await this.supabase
       .from('equipment_inspections')
-      .select('id');
+      .select('id')
+      .eq('inspection_date', today);
 
     const pendingResult = await this.supabase
       .from('equipment_inspections')
       .select('id')
+      .eq('inspection_date', today)
       .in('status', ['pending', 'fault']);
 
+    // 获取总器械数
+    const equipmentResult = await this.supabase
+      .from('equipment_list')
+      .select('id');
+
+    const totalEquipment = equipmentResult.data?.length || 0;
+    const todayInspected = totalResult.data?.length || 0;
+    const todayPending = pendingResult.data?.length || 0;
+
     return {
-      total: totalResult.data?.length || 0,
-      pending: pendingResult.data?.length || 0,
+      totalEquipment,
+      todayInspected,
+      todayPending,
+      todayUninspected: totalEquipment - todayInspected,
     };
   }
 
@@ -178,6 +243,8 @@ export class InspectionService {
     remark?: string;
     inspector: string;
   }) {
+    const today = this.getToday();
+    
     const result = await this.supabase
       .from('equipment_inspections')
       .insert({
@@ -187,13 +254,14 @@ export class InspectionService {
         status: data.status,
         remark: data.remark || null,
         inspector: data.inspector,
+        inspection_date: today,
       })
       .select()
       .single();
     
     return result.data;
   }
-
+	
   // 获取巡检详情
   async getInspectionDetail(id: number) {
     const result = await this.supabase
@@ -205,15 +273,54 @@ export class InspectionService {
     return result.data;
   }
 
-  // 更新巡检状态
-  async updateInspectionStatus(id: number, status: string) {
-    const result = await this.supabase
-      .from('equipment_inspections')
-      .update({ status })
-      .eq('id', id)
-      .select()
-      .single();
+  // 获取按区域统计的巡检进度
+  async getAreaProgress() {
+    const today = this.getToday();
+    const areas = ['A', 'B', 'C'];
+    const areaNames: Record<string, string> = {
+      A: '有氧区',
+      B: '力量区',
+      C: '自由重量区',
+    };
     
-    return result.data;
+    const progress: Record<string, any> = {};
+    
+    for (const area of areas) {
+      // 获取该区域器械总数
+      const totalResult = await this.supabase
+        .from('equipment_list')
+        .select('id')
+        .eq('area', area);
+      
+      // 获取该区域今天已巡检数
+      const inspectedResult = await this.supabase
+        .from('equipment_inspections')
+        .select('id')
+        .eq('inspection_date', today)
+        .eq('area', area);
+      
+      // 获取该区域待维修数
+      const pendingResult = await this.supabase
+        .from('equipment_inspections')
+        .select('id')
+        .eq('inspection_date', today)
+        .eq('area', area)
+        .in('status', ['pending', 'fault']);
+      
+      const total = totalResult.data?.length || 0;
+      const inspected = inspectedResult.data?.length || 0;
+      const pending = pendingResult.data?.length || 0;
+      
+      progress[area] = {
+        name: areaNames[area],
+        total,
+        inspected,
+        pending,
+        uninspected: total - inspected,
+        percentage: total > 0 ? Math.round((inspected / total) * 100) : 0,
+      };
+    }
+    
+    return progress;
   }
 }

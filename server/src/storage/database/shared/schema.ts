@@ -43,11 +43,13 @@ export const equipmentInspections = pgTable(
     remark: text("remark"),
     inspector: varchar("inspector", { length: 100 }).notNull(),
     created_at: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+    inspection_date: varchar("inspection_date", { length: 10 }).notNull(), // 巡检日期 YYYY-MM-DD
   },
   (table) => [
     index("equipment_inspections_status_idx").on(table.status),
     index("equipment_inspections_area_idx").on(table.area),
     index("equipment_inspections_created_at_idx").on(table.created_at),
+    index("equipment_inspections_date_idx").on(table.inspection_date),
   ]
 )
 

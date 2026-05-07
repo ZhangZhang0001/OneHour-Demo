@@ -26,21 +26,49 @@ export class InspectionController {
     return { code: 200, msg: 'success', data: { inspections: data } };
   }
 
-  // 获取待巡检器械
+  // 获取待巡检器械（待维修+故障）
   @Get('pending-equipment')
   async getPendingEquipment() {
     const data = await this.inspectionService.getPendingInspections();
     return { code: 200, msg: 'success', data: { inspections: data } };
   }
 
-  // 获取未巡检的器械
-  @Get('uninspected')
-  async getUninspected() {
-    const data = await this.inspectionService.getUninspectedEquipment();
+  // 获取今天未巡检的器械
+  @Get('today-uninspected')
+  async getTodayUninspected() {
+    const data = await this.inspectionService.getTodayUninspected();
     return { code: 200, msg: 'success', data: { equipment: data } };
   }
 
-  // 获取最近巡检记录
+  // 获取今天未巡检数量
+  @Get('today-uninspected-count')
+  async getTodayUninspectedCount() {
+    const data = await this.inspectionService.getTodayUninspectedCount();
+    return { code: 200, msg: 'success', data };
+  }
+
+  // 每日重置巡检状态
+  @Post('reset-daily')
+  async resetDaily() {
+    const data = await this.inspectionService.resetDailyInspection();
+    return { code: 200, msg: 'success', data };
+  }
+
+  // 获取区域巡检进度
+  @Get('area-progress')
+  async getAreaProgress() {
+    const data = await this.inspectionService.getAreaProgress();
+    return { code: 200, msg: 'success', data };
+  }
+
+  // 获取未巡检的器械（兼容旧接口）
+  @Get('uninspected')
+  async getUninspected() {
+    const data = await this.inspectionService.getTodayUninspected();
+    return { code: 200, msg: 'success', data: { equipment: data } };
+  }
+
+  // 获取最近巡检记录（今天的）
   @Get('recent')
   async getRecent(@Query('limit') limit?: string) {
     const data = await this.inspectionService.getRecentInspections(
@@ -60,7 +88,7 @@ export class InspectionController {
   @Get('pending-count')
   async getPendingCount() {
     const data = await this.inspectionService.getStats();
-    return { code: 200, msg: 'success', data: { count: data.pending } };
+    return { code: 200, msg: 'success', data: { count: data.todayPending } };
   }
 
   // 新增巡检记录
@@ -81,19 +109,6 @@ export class InspectionController {
   @Get('detail/:id')
   async getDetail(@Param('id') id: string) {
     const data = await this.inspectionService.getInspectionDetail(parseInt(id, 10));
-    return { code: 200, msg: 'success', data };
-  }
-
-  // 更新巡检状态
-  @Post('update-status/:id')
-  async updateStatus(
-    @Param('id') id: string,
-    @Body() body: { status: string }
-  ) {
-    const data = await this.inspectionService.updateInspectionStatus(
-      parseInt(id, 10),
-      body.status
-    );
     return { code: 200, msg: 'success', data };
   }
 }

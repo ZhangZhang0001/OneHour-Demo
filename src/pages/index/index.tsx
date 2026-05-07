@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react'
 import { View, Text, ScrollView } from '@tarojs/components'
 import { Network } from '@/network'
 import { Card, CardContent } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
@@ -10,21 +9,18 @@ import { BookOpen, Wrench, ArrowRight, Clock, MessageSquare, CircleAlert, Circle
 import Taro from '@tarojs/taro'
 import './index.css'
 
-interface RecentInspection {
+interface UninspectedEquipment {
   id: number
-  equipment_name: string
-  status: 'normal' | 'pending' | 'fault'
-  inspector: string
-  remark: string
-  created_at: string
+  name: string
+  area: string
 }
 
 export default function Index() {
-  const [stats, setStats] = useState<{ trainingCount: number; pendingCount: number }>({
+  const [stats, setStats] = useState<{ trainingCount: number; uninspectedCount: number }>({
     trainingCount: 0,
-    pendingCount: 0
+    uninspectedCount: 0
   })
-  const [recentInspections, setRecentInspections] = useState<RecentInspection[]>([])
+  const [uninspectedList, setUninspectedList] = useState<UninspectedEquipment[]>([])
   const [showFeedbackDialog, setShowFeedbackDialog] = useState(false)
   const [feedbackContent, setFeedbackContent] = useState('')
   const [feedbackType, setFeedbackType] = useState('suggestion')
@@ -36,39 +32,36 @@ export default function Index() {
 
   const fetchData = async () => {
     try {
+      // 获取培训资料数量
       const trainingRes = await Network.request({ url: '/api/training/count' })
       console.log('培训资料数量响应:', trainingRes.data)
       const trainingCount = trainingRes.data?.data?.count || 0
 
-      const pendingRes = await Network.request({ url: '/api/inspection/pending-count' })
-      console.log('待巡检数量响应:', pendingRes.data)
-      const pendingCount = pendingRes.data?.data?.count || 0
+      // 获取今日未巡检数量
+      const uninspectedRes = await Network.request({ url: '/api/inspection/today-uninspected-count' })
+      console.log('今日未巡检响应:', uninspectedRes.data)
+      const uninspectedCount = uninspectedRes.data?.data?.count || 0
+      const uninspectedEquipment = uninspectedRes.data?.data?.list || []
 
-      // 获取未巡检列表（待维修+故障）
-      const pendingListRes = await Network.request({ url: '/api/inspection/list?status=pending,fault' })
-      console.log('未巡检列表响应:', pendingListRes.data)
-      const pendingList = pendingListRes.data?.data?.inspections || []
-
-      setStats({ trainingCount, pendingCount })
-      setRecentInspections(pendingList)
+      setStats({ trainingCount, uninspectedCount })
+      setUninspectedList(uninspectedEquipment)
     } catch (error) {
       console.error('获取数据失败:', error)
     }
   }
 
-  const getStatusBadge = (status: string) => {
-    const statusMap = {
-      normal: { label: '正常', color: 'bg-green-500' },
-      pending: { label: '待维修', color: 'bg-orange-500' },
-      fault: { label: '故障', color: 'bg-red-500' }
+  const getAreaLabel = (area: string) => {
+    const areaMap: Record<string, string> = {
+      A: '有氧区',
+      B: '力量区',
+      C: '自由重量区'
     }
-    const config = statusMap[status as keyof typeof statusMap] || statusMap.normal
-    return <Badge className={`${config.color} text-white`}>{config.label}</Badge>
+    return areaMap[area] || area
   }
 
-  const formatDate = (dateStr: string) => {
-    const date = new Date(dateStr)
-    return `${date.getMonth() + 1}/${date.getDate()} ${date.getHours()}:${String(date.getMinutes()).padStart(2, '0')}`
+  const formatDate = () => {
+    const now = new Date()
+    return `${now.getMonth() + 1}月${now.getDate()}日`
   }
 
   const handleSubmitFeedback = async () => {
@@ -164,8 +157,8 @@ export default function Index() {
                   <Wrench size={24} color="#f97316" />
                 </View>
                 <View>
-                  <Text className="block text-2xl font-bold text-slate-800">{stats.pendingCount}</Text>
-                  <Text className="block text-sm text-slate-500">待巡检</Text>
+                  <Text className="block text-2xl font-bold text-slate-800">{stats.uninspectedCount}</Text>
+                  <Text className="block text-sm text-slate-500">今日待巡检</Text>
                 </View>
               </View>
             </CardContent>
@@ -209,40 +202,42 @@ export default function Index() {
           </CardContent>
         </Card>
 
-        {/* 未巡检提醒 */}
+        {/* 今日待巡检 */}
         <View className="flex items-center justify-between mt-6 mb-3">
           <View className="flex items-center gap-2">
-            <Text className="block text-lg font-semibold text-slate-800">未巡检提醒</Text>
-            {stats.pendingCount > 0 && (
-              <Badge className="bg-red-500 text-white">{stats.pendingCount}</Badge>
+            <Text className="block text-lg font-semibold text-slate-800">今日待巡检</Text>
+            <Text className="block text-xs text-slate-400">{formatDate()}</Text>
+            {stats.uninspectedCount > 0 && (
+              <View className="px-2 py-1 rounded-full bg-red-500">
+                <Text className="block text-xs text-white">{stats.uninspectedCount}</Text>
+              </View>
             )}
           </View>
           <View 
             className="flex items-center gap-1 text-blue-600" 
             onClick={() => Taro.switchTab({ url: '/pages/inspection/index' })}
           >
-            <Text className="block text-sm">查看全部</Text>
+            <Text className="block text-sm">去巡检</Text>
             <ArrowRight size={14} color="#2563eb" />
           </View>
         </View>
 
-        {recentInspections.length > 0 ? (
+        {uninspectedList.length > 0 ? (
           <ScrollView scrollX className="mb-6" style={{ display: 'flex', flexDirection: 'row' }}>
             <View className="flex gap-3">
-              {recentInspections.map((item) => (
-                <Card key={item.id} className="w-56 flex-shrink-0">
+              {uninspectedList.map((item) => (
+                <Card key={item.id} className="w-48 flex-shrink-0">
                   <CardContent className="p-4">
                     <View className="flex items-center gap-2 mb-2">
-                      <CircleAlert size={16} color={item.status === 'fault' ? '#ef4444' : '#f97316'} />
-                      {getStatusBadge(item.status)}
+                      <CircleAlert size={16} color="#f97316" />
+                      <View className="px-2 py-1 rounded-full bg-slate-100">
+                        <Text className="block text-xs text-slate-600">{getAreaLabel(item.area)}</Text>
+                      </View>
                     </View>
-                    <Text className="block text-base font-medium text-slate-800">{item.equipment_name}</Text>
-                    {item.remark && (
-                      <Text className="block text-xs text-slate-400 mt-1 truncate">{item.remark}</Text>
-                    )}
+                    <Text className="block text-base font-medium text-slate-800">{item.name}</Text>
                     <View className="flex items-center gap-1 mt-2">
                       <Clock size={10} color="#94a3b8" />
-                      <Text className="block text-xs text-slate-400">{formatDate(item.created_at)}</Text>
+                      <Text className="block text-xs text-slate-400">待巡检</Text>
                     </View>
                   </CardContent>
                 </Card>
@@ -253,7 +248,7 @@ export default function Index() {
           <Card className="mb-6">
             <CardContent className="p-6 text-center">
               <CircleCheck size={32} color="#22c55e" className="mx-auto mb-2" />
-              <Text className="block text-slate-600">太棒了！暂无未巡检器械</Text>
+              <Text className="block text-slate-600">太棒了！今日巡检已全部完成</Text>
             </CardContent>
           </Card>
         )}
@@ -299,40 +294,20 @@ export default function Index() {
                   onInput={(e: any) => setFeedbackContent(e.detail.value)}
                 />
               </View>
-              <Text className="block text-xs text-slate-400 mt-1 text-right">
-                {feedbackContent.length}/500
-              </Text>
+              <Text className="block text-xs text-slate-400 mt-1 text-right">{feedbackContent.length}/500</Text>
             </View>
 
-            <View className="flex items-center gap-2 bg-purple-50 rounded-lg p-3">
-              <View className="w-4 h-4 rounded-full bg-purple-600 flex items-center justify-center">
-                <Text className="text-white text-xs">!</Text>
-              </View>
-              <Text className="block text-xs text-purple-700">
-                此反馈完全匿名，不会收集任何个人信息
-              </Text>
+            <View className="bg-purple-50 rounded-lg p-3">
+              <Text className="block text-xs text-purple-600">此反馈完全匿名，不会收集任何个人信息</Text>
             </View>
 
-            <View className="flex gap-3 pt-2">
-              <View className="flex-1">
-                <Button 
-                  variant="outline" 
-                  className="w-full"
-                  onClick={() => setShowFeedbackDialog(false)}
-                >
-                  取消
-                </Button>
-              </View>
-              <View className="flex-1">
-                <Button 
-                  className="w-full bg-purple-600 hover:bg-purple-700"
-                  disabled={submitting}
-                  onClick={handleSubmitFeedback}
-                >
-                  <Text className="text-white">{submitting ? '提交中...' : '提交'}</Text>
-                </Button>
-              </View>
-            </View>
+            <Button 
+              className="w-full bg-purple-600 hover:bg-purple-700"
+              onClick={handleSubmitFeedback}
+              disabled={submitting}
+            >
+              <Text className="text-white">{submitting ? '提交中...' : '提交反馈'}</Text>
+            </Button>
           </View>
         </DialogContent>
       </Dialog>
