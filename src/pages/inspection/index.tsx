@@ -74,7 +74,7 @@ export default function InspectionList() {
 
   return (
     <View className="min-h-screen bg-slate-50 pb-safe">
-      <ScrollView className="p-4 pb-safe" scrollY>
+      <ScrollView className="p-4 pb-safe" scrollY style={{ width: '100%' }}>
         {/* 搜索栏 */}
         <View className="mb-4">
           <View className="bg-white rounded-xl px-4 py-3 flex items-center gap-3">

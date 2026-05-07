@@ -128,7 +128,7 @@ export default function Index() {
 
   return (
     <View className="min-h-screen bg-slate-50 pb-safe">
-      <ScrollView className="p-4 pb-safe" scrollY>
+      <ScrollView className="p-4 pb-safe" scrollY style={{ width: '100%' }}>
         {/* 头部欢迎 */}
         <View className="mb-6">
           <Text className="block text-2xl font-bold text-slate-800">健身房管理系统</Text>
