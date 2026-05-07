@@ -1,172 +1,169 @@
 import { useState, useEffect } from 'react'
 import { View, Text, ScrollView } from '@tarojs/components'
-import { Network } from '@/network'
+import { useRouter } from '@tarojs/taro'
+import { Wrench, Plus, CircleCheck, Clock, TriangleAlert, ArrowRight } from 'lucide-react-taro'
 import { Card, CardContent } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Wrench, Plus, Search, Clock, ArrowRight } from 'lucide-react-taro'
+import { Network } from '@/network'
 import Taro from '@tarojs/taro'
-import './index.css'
 
-interface Inspection {
+interface InspectionRecord {
   id: number
   equipment_name: string
-  status: 'normal' | 'pending' | 'fault'
+  equipment_id: number
+  area: string
+  status: 'normal' | 'pending' | 'broken'
   remark: string
   inspector: string
   created_at: string
 }
 
-export default function InspectionList() {
-  const [inspections, setInspections] = useState<Inspection[]>([])
+type FilterStatus = 'all' | 'normal' | 'pending' | 'broken'
+
+export default function Inspection() {
+  const router = useRouter()
+  const [records, setRecords] = useState<InspectionRecord[]>([])
   const [loading, setLoading] = useState(true)
-  const [searchKeyword, setSearchKeyword] = useState('')
-  const [statusFilter, setStatusFilter] = useState<string>('all')
+  const [filterStatus, setFilterStatus] = useState<FilterStatus>('all')
 
   useEffect(() => {
-    fetchInspections()
+    fetchRecords()
   }, [])
 
-  const fetchInspections = async () => {
+  const fetchRecords = async () => {
     try {
       setLoading(true)
       const res = await Network.request({ url: '/api/inspection/list' })
-      console.log('巡检记录列表响应:', res.data)
-      const list = res.data?.data?.inspections || []
-      setInspections(list)
-    } catch (error) {
-      console.error('获取巡检记录失败:', error)
-      Taro.showToast({ title: '获取记录失败', icon: 'none' })
+      if (res.data?.code === 200) {
+        setRecords(res.data.data || [])
+      }
+    } catch (err) {
+      console.error('获取巡检记录失败', err)
     } finally {
       setLoading(false)
     }
   }
 
-  const getStatusBadge = (status: string) => {
-    const statusMap = {
-      normal: { label: '正常', color: 'bg-green-500' },
-      pending: { label: '待维修', color: 'bg-orange-500' },
-      fault: { label: '故障', color: 'bg-red-500' }
+  const filteredRecords = filterStatus === 'all' 
+    ? records 
+    : records.filter(r => r.status === filterStatus)
+
+  const getStatusConfig = (status: string) => {
+    switch (status) {
+      case 'normal':
+        return { label: '正常', color: 'bg-green-100 text-green-700', icon: CircleCheck, iconColor: '#22c55e' }
+      case 'pending':
+        return { label: '待维修', color: 'bg-orange-100 text-orange-700', icon: Clock, iconColor: '#f97316' }
+      case 'broken':
+        return { label: '故障', color: 'bg-red-100 text-red-700', icon: TriangleAlert, iconColor: '#ef4444' }
+      default:
+        return { label: '未知', color: 'bg-slate-100 text-slate-700', icon: TriangleAlert, iconColor: '#64748b' }
     }
-    const config = statusMap[status as keyof typeof statusMap] || statusMap.normal
-    return <Badge className={`${config.color} text-white`}>{config.label}</Badge>
   }
 
-  const formatDate = (dateStr: string) => {
-    const date = new Date(dateStr)
-    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')} ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`
+  const navigateTo = (path: string) => {
+    if (path.startsWith('/')) {
+      router.push(path)
+    }
   }
-
-  const filteredInspections = inspections.filter(i => {
-    const matchSearch = i.equipment_name.toLowerCase().includes(searchKeyword.toLowerCase()) ||
-                        i.inspector.toLowerCase().includes(searchKeyword.toLowerCase())
-    const matchStatus = statusFilter === 'all' || i.status === statusFilter
-    return matchSearch && matchStatus
-  })
-
-  const statusOptions = [
-    { value: 'all', label: '全部' },
-    { value: 'normal', label: '正常' },
-    { value: 'pending', label: '待维修' },
-    { value: 'fault', label: '故障' }
-  ]
 
   return (
     <View className="min-h-screen bg-slate-50 pb-safe">
-      <ScrollView className="p-4 pb-safe" scrollY style={{ width: '100%' }}>
-        {/* 搜索栏 */}
-        <View className="mb-4">
-          <View className="bg-white rounded-xl px-4 py-3 flex items-center gap-3">
-            <Search size={18} color="#94a3b8" />
-            <Input
-              className="flex-1 bg-transparent border-none p-0"
-              placeholder="搜索器械或检查人..."
-              value={searchKeyword}
-              onInput={(e) => setSearchKeyword(e.detail.value)}
-            />
-          </View>
-        </View>
+      {/* 顶部标题 */}
+      <View className="bg-white px-4 py-4 border-b border-slate-100">
+        <Text className="block text-xl font-bold text-slate-800">器械巡检</Text>
+        <Text className="block text-sm text-slate-500 mt-1">每日器械巡检与维护记录</Text>
+      </View>
 
-        {/* 状态筛选 */}
-        <View className="flex gap-2 mb-4 overflow-x-auto">
-          {statusOptions.map((option) => (
-            <View
-              key={option.value}
-              className={`px-4 py-2 rounded-full text-sm whitespace-nowrap ${
-                statusFilter === option.value
-                  ? 'bg-blue-600 text-white'
+      {/* 添加按钮 */}
+      <View className="px-4 py-3">
+        <Button className="w-full" onClick={() => navigateTo('/pages/inspection/add')}>
+          <Plus size={18} />
+          <Text className="ml-2">新增巡检记录</Text>
+        </Button>
+      </View>
+
+      {/* 筛选标签 */}
+      <View className="px-4 pb-3">
+        <View className="flex gap-2">
+          {[
+            { key: 'all', label: '全部' },
+            { key: 'normal', label: '正常' },
+            { key: 'pending', label: '待维修' },
+            { key: 'broken', label: '故障' }
+          ].map(item => (
+            <View 
+              key={item.key}
+              className={`px-4 py-2 rounded-full text-sm ${
+                filterStatus === item.key 
+                  ? 'bg-blue-500 text-white' 
                   : 'bg-white text-slate-600'
               }`}
-              onClick={() => setStatusFilter(option.value)}
+              onClick={() => setFilterStatus(item.key as FilterStatus)}
             >
-              <Text className={`block text-sm ${statusFilter === option.value ? 'text-white' : 'text-slate-600'}`}>
-                {option.label}
-              </Text>
+              {item.label}
             </View>
           ))}
         </View>
+      </View>
 
-        {/* 新增按钮 */}
-        <Button 
-          className="w-full mb-4 bg-blue-600 hover:bg-blue-700" 
-          onClick={() => Taro.navigateTo({ url: '/pages/inspection/add' })}
-        >
-          <Plus size={18} color="#fff" />
-          <Text className="ml-2">新增巡检记录</Text>
-        </Button>
-
-        {/* 巡检记录列表 */}
+      {/* 记录列表 */}
+      <View className="px-4 pb-4">
         {loading ? (
-          <View className="text-center py-12">
-            <Text className="block text-slate-400">加载中...</Text>
+          <View className="bg-white rounded-xl p-8 text-center">
+            <Text className="block text-slate-500">加载中...</Text>
           </View>
-        ) : filteredInspections.length > 0 ? (
-          <View className="space-y-3">
-            {filteredInspections.map((inspection) => (
-              <Card
-                className="w-full"
-                key={inspection.id}
-                onClick={() => Taro.navigateTo({ url: `/pages/inspection/detail?id=${inspection.id}` })}
+        ) : filteredRecords.length > 0 ? (
+          filteredRecords.map((record) => {
+            const config = getStatusConfig(record.status)
+            const StatusIcon = config.icon
+            return (
+              <View 
+                key={record.id}
+                className="bg-white rounded-xl mb-3 overflow-hidden"
+                onClick={() => navigateTo(`/pages/inspection/detail?id=${record.id}`)}
               >
-                <CardContent className="p-4">
-                  <View className="flex items-start justify-between">
-                    <View className="flex items-start gap-3 flex-1">
-                      <View className="w-12 h-12 rounded-xl bg-orange-50 flex items-center justify-center flex-shrink-0">
-                        <Wrench size={24} color="#f97316" />
-                      </View>
-                      <View className="flex-1 min-w-0">
-                        <Text className="block text-base font-medium text-slate-800">{inspection.equipment_name}</Text>
-                        {inspection.remark && (
-                          <Text className="block text-sm text-slate-500 mt-1 truncate">{inspection.remark}</Text>
-                        )}
-                        <View className="flex items-center gap-3 mt-2">
-                          <View className="flex items-center gap-1">
-                            <Clock size={12} color="#94a3b8" />
-                            <Text className="block text-xs text-slate-400">{formatDate(inspection.created_at)}</Text>
-                          </View>
+                <View className="p-4">
+                  <View className="flex items-start gap-3">
+                    <View className="w-12 h-12 rounded-xl bg-orange-100 flex items-center justify-center flex-shrink-0">
+                      <Wrench size={24} color="#f97316" />
+                    </View>
+                    <View className="flex-1">
+                      <View className="flex items-center gap-2">
+                        <Text className="block text-base font-medium text-slate-800">{record.equipment_name}</Text>
+                        <View className={`px-2 py-0.5 rounded text-xs ${config.color}`}>
+                          {config.label}
                         </View>
                       </View>
+                      <Text className="block text-sm text-slate-500 mt-1">
+                        区域：{record.area}区 | 检查人：{record.inspector}
+                      </Text>
+                      {record.remark && (
+                        <Text className="block text-sm text-slate-400 mt-1 line-clamp-1">
+                          备注：{record.remark}
+                        </Text>
+                      )}
+                      <Text className="block text-xs text-slate-400 mt-2">
+                        {new Date(record.created_at).toLocaleDateString('zh-CN')}
+                      </Text>
                     </View>
-                    <View className="flex flex-col items-end gap-2">
-                      {getStatusBadge(inspection.status)}
-                      <ArrowRight size={16} color="#94a3b8" />
-                    </View>
+                    <ArrowRight size={20} color="#94a3b8" />
                   </View>
-                </CardContent>
-              </Card>
-            ))}
-          </View>
+                </View>
+              </View>
+            )
+          })
         ) : (
-          <Card>
-            <CardContent className="p-12 text-center">
-              <Wrench size={48} color="#cbd5e1" />
-              <Text className="block text-slate-400 mt-3">暂无巡检记录</Text>
-              <Text className="block text-sm text-slate-400 mt-1">点击上方按钮添加巡检记录</Text>
-            </CardContent>
-          </Card>
+          <View className="bg-white rounded-xl p-8 text-center">
+            <Wrench size={48} color="#cbd5e1" />
+            <Text className="block text-slate-500 mt-3">暂无巡检记录</Text>
+            <Text className="block text-sm text-slate-400 mt-1">点击上方按钮新增巡检记录</Text>
+          </View>
         )}
-      </ScrollView>
+      </View>
+
+      {/* 底部安全区域 */}
+      <View className="h-safe" />
     </View>
   )
 }
