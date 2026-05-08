@@ -43,7 +43,7 @@ export default function Profile() {
         <Card className="mb-4">
           <CardContent className="p-6">
             <View className="flex items-center gap-4">
-              <Avatar className="w-20 h-20 bg-white border border-slate-200">
+              <Avatar className="w-20 h-20 bg-white">
                 <Dumbbell size={40} color="#3b82f6" />
               </Avatar>
               <View>
