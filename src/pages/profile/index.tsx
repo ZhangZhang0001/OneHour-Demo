@@ -43,8 +43,8 @@ export default function Profile() {
         <Card className="mb-4">
           <CardContent className="p-6">
             <View className="flex items-center gap-4">
-              <Avatar className="w-20 h-20 bg-orange-100">
-                <Dumbbell size={40} color="#ea580c" />
+              <Avatar className="w-20 h-20 bg-white border border-slate-200">
+                <Dumbbell size={40} color="#3b82f6" />
               </Avatar>
               <View>
                 <Text className="block text-xl font-semibold text-slate-800">健身房员工</Text>
