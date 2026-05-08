@@ -4,7 +4,7 @@ import Taro from '@tarojs/taro'
 import { Card, CardContent } from '@/components/ui/card'
 import { Avatar } from '@/components/ui/avatar'
 import { Separator } from '@/components/ui/separator'
-import { User, Building2, Phone, Info, MessageSquare, ClipboardList, ArrowRight } from 'lucide-react-taro'
+import { Building2, Phone, Info, MessageSquare, ClipboardList, ArrowRight, Dumbbell } from 'lucide-react-taro'
 import { Network } from '@/network'
 
 export default function Profile() {
@@ -43,8 +43,8 @@ export default function Profile() {
         <Card className="mb-4">
           <CardContent className="p-6">
             <View className="flex items-center gap-4">
-              <Avatar className="w-20 h-20 bg-blue-100">
-                <User size={40} color="#1e40af" />
+              <Avatar className="w-20 h-20 bg-orange-100">
+                <Dumbbell size={40} color="#ea580c" />
               </Avatar>
               <View>
                 <Text className="block text-xl font-semibold text-slate-800">健身房员工</Text>
