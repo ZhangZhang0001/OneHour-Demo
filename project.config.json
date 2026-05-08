@@ -12,5 +12,6 @@
     "minified": false
   },
   "compileType": "miniprogram",
+  "sourceRoot": "src",
   "packOptions": { "ignore": [{ "type": "folder", "value": "./assets" }] }
 }
