@@ -156,45 +156,69 @@ export class InspectionService {
     inspector: string;
   }) {
     const { equipmentIds, equipmentNames, area, status, remark, inspector } = data;
-    const today = this.getToday();
+    const todayDate = new Date().toISOString().split('T')[0];
+    let updatedCount = 0;
+    let insertedCount = 0;
 
-    // 为每个器械创建巡检记录
-    const records = equipmentIds.map((id, index) => ({
-      equipment_id: id,
-      equipment_name: equipmentNames?.[index] || '',
-      area,
-      status,
-      remark: remark || null,
-      inspector,
-      inspection_date: today,
-    }));
+    for (let i = 0; i < equipmentIds.length; i++) {
+      const equipmentId = equipmentIds[i];
+      const equipmentName = equipmentNames?.[i] || '';
 
-    // 批量插入巡检记录
-    const result = await this.supabase
-      .from('equipment_inspections')
-      .insert(records)
-      .select();
+      // 检查当天是否已有该器械的巡检记录
+      const startOfDay = todayDate + ' 00:00:00';
+      const endOfDay = todayDate + ' 23:59:59';
+      const existingResult = await this.supabase
+        .from('equipment_inspections')
+        .select('id')
+        .eq('equipment_id', equipmentId)
+        .gte('inspection_date', startOfDay)
+        .lte('inspection_date', endOfDay)
+        .single();
 
-    if (result.error) {
-      throw new Error(`添加巡检记录失败: ${result.error.message}`);
-    }
+      if (existingResult.data) {
+        // 已存在，更新记录
+        await this.supabase
+          .from('equipment_inspections')
+          .update({
+            status,
+            remark: remark || null,
+            inspector,
+            created_at: new Date().toISOString(),
+          })
+          .eq('id', existingResult.data.id);
+        updatedCount++;
+      } else {
+        // 不存在，插入新记录
+        await this.supabase
+          .from('equipment_inspections')
+          .insert({
+            equipment_id: equipmentId,
+            equipment_name: equipmentName,
+            area,
+            status,
+            remark: remark || null,
+            inspector,
+            inspection_date: todayDate,
+          });
+        insertedCount++;
+      }
 
-    // 同时更新器械表中的状态
-    for (const equipmentId of equipmentIds) {
+      // 更新器械表中的状态
       await this.supabase
         .from('equipment_list')
         .update({
           status,
-          last_inspection_date: today,
+          last_inspection_date: todayDate,
         })
         .eq('id', equipmentId);
     }
 
     return {
       success: true,
-      message: `成功添加 ${records.length} 条巡检记录`,
-      count: records.length,
-      data: result.data,
+      message: `成功 ${updatedCount > 0 ? `更新 ${updatedCount} 条` : ''}${insertedCount > 0 ? `新增 ${insertedCount} 条` : ''}巡检记录`,
+      count: updatedCount + insertedCount,
+      updatedCount,
+      insertedCount,
     };
   }
 
