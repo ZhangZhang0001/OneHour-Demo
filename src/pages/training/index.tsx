@@ -31,7 +31,9 @@ export default function Training() {
         method: 'GET'
       })
       if (res.data?.code === 200) {
-        setMaterials(res.data.data || [])
+        // 后端返回 { materials: [...] }，需要取 res.data.data.materials
+        const materialsData = res.data.data?.materials || res.data.data || []
+        setMaterials(Array.isArray(materialsData) ? materialsData : [])
       }
     } catch (err) {
       console.error('获取培训资料失败', err)
