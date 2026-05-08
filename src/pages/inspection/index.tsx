@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { View, Text } from '@tarojs/components'
 import Taro from '@tarojs/taro'
-import { Wrench, Plus, RotateCcw } from 'lucide-react-taro'
+import { Wrench, Plus } from 'lucide-react-taro'
 import { Network } from '@/network'
 
 interface InspectionRecord {
@@ -42,40 +42,6 @@ export default function Inspection() {
     fetchRecords()
   }, [fetchRecords])
 
-  // 重置器械数据
-  const handleResetEquipment = async () => {
-    try {
-      const res = await Taro.showModal({
-        title: '确认重置',
-        content: '将删除现有器械数据，重新初始化ABC区的29个器械。确定要重置吗？',
-        confirmText: '确定重置',
-        confirmColor: '#ef4444'
-      })
-      
-      if (!res.confirm) return
-      
-      Taro.showLoading({ title: '重置中...' })
-      const result = await Network.request({
-        url: '/api/inspection/init-equipment',
-        method: 'POST',
-        data: { force: true }
-      })
-      Taro.hideLoading()
-      
-      console.log('重置结果:', result.data)
-      Taro.showToast({ 
-        title: result.data?.data?.message || '重置成功', 
-        icon: 'success' 
-      })
-      
-      // 重新获取巡检记录
-      fetchRecords()
-    } catch (error) {
-      Taro.hideLoading()
-      console.error('重置失败:', error)
-      Taro.showToast({ title: '重置失败', icon: 'none' })
-    }
-  }
 
   const filteredRecords = filterStatus === 'all' 
     ? records 
@@ -110,21 +76,12 @@ export default function Inspection() {
 
       {/* 添加按钮 */}
       <View className="px-4 pb-3 pt-3">
-        <View className="flex gap-2">
-          <View 
-            className="flex-1 bg-blue-500 rounded-lg py-3 px-4 flex items-center justify-center"
-            onClick={() => navigateTo('/pages/inspection/add')}
-          >
-            <Plus size={18} color="#ffffff" />
-            <Text className="ml-2 text-white font-medium">新增巡检记录</Text>
-          </View>
-          <View 
-            className="bg-orange-500 rounded-lg py-3 px-4 flex items-center justify-center"
-            onClick={handleResetEquipment}
-          >
-            <RotateCcw size={16} color="#ffffff" />
-            <Text className="ml-1 text-white text-sm">重置器械</Text>
-          </View>
+        <View 
+          className="bg-blue-500 rounded-lg py-3 px-4 flex items-center justify-center"
+          onClick={() => navigateTo('/pages/inspection/add')}
+        >
+          <Plus size={18} color="#ffffff" />
+          <Text className="ml-2 text-white font-medium">新增巡检记录</Text>
         </View>
       </View>
 
