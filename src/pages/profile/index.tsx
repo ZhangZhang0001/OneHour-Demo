@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import Taro from '@tarojs/taro'
 import { View, Text } from '@tarojs/components'
-import { Dumbbell, Phone, MessageSquare, History, BookOpen, ChartBar, LogOut, ChevronRight } from 'lucide-react-taro'
+import { Dumbbell, Phone, MessageSquare, History, BookOpen, ChartBar, MessageCircle, LogOut } from 'lucide-react-taro'
 
 interface GymInfo {
   name: string
@@ -31,6 +31,11 @@ export default function Profile() {
     { icon: History, label: '巡检历史', color: 'bg-blue-50', iconColor: '#3b82f6', url: '/pages/history/index' },
     { icon: BookOpen, label: '培训资料', color: 'bg-amber-50', iconColor: '#d97706', url: '/pages/training/index' },
     { icon: ChartBar, label: '数据统计', color: 'bg-green-50', iconColor: '#16a34a', url: '/pages/statistics/index' },
+  ]
+
+  const systemItems = [
+    { icon: MessageCircle, label: '意见反馈', color: 'bg-purple-50', iconColor: '#9333ea' },
+    { icon: LogOut, label: '退出登录', color: 'bg-red-50', iconColor: '#dc2626' },
   ]
 
   return (
@@ -95,23 +100,28 @@ export default function Profile() {
                 </View>
                 <Text className="block text-sm text-slate-700">{item.label}</Text>
               </View>
-              <ChevronRight size={18} color="#cbd5e1" />
             </View>
           ))}
         </View>
       </View>
 
-      {/* 其他功能 */}
+      {/* 系统 */}
       <View className="px-4 mt-4">
+        <Text className="block text-sm font-medium text-slate-500 mb-3 px-1">系统</Text>
         <View className="bg-white rounded-2xl overflow-hidden">
-          <View className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
-            <View className="flex items-center gap-3">
-              <View className="w-9 h-9 rounded-lg bg-red-50 flex items-center justify-center">
-                <LogOut size={18} color="#dc2626" />
+          {systemItems.map((item, index) => (
+            <View 
+              key={item.label}
+              className={`flex items-center justify-between px-5 py-4 ${index < systemItems.length - 1 ? 'border-b border-slate-100' : ''}`}
+            >
+              <View className="flex items-center gap-3">
+                <View className={`w-9 h-9 rounded-lg flex items-center justify-center ${item.color}`}>
+                  <item.icon size={18} color={item.iconColor} />
+                </View>
+                <Text className={`block text-sm ${item.label === '退出登录' ? 'text-red-600' : 'text-slate-700'}`}>{item.label}</Text>
               </View>
-              <Text className="block text-sm text-red-600">退出登录</Text>
             </View>
-          </View>
+          ))}
         </View>
       </View>
 
