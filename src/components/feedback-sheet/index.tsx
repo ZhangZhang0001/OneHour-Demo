@@ -27,7 +27,7 @@ export default function FeedbackSheet({ open, onClose }: FeedbackSheetProps) {
     setLoading(true)
     try {
       await Network.request({
-        url: '/api/feedback',
+        url: '/api/feedback/submit',
         method: 'POST',
         data: { content },
       })
