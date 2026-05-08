@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { View, Text } from '@tarojs/components'
 import Taro from '@tarojs/taro'
-import { Wrench, Plus, ArrowRight } from 'lucide-react-taro'
+import { Wrench, Plus, ArrowRight, RotateCcw } from 'lucide-react-taro'
 import { Button } from '@/components/ui/button'
 import { Network } from '@/network'
 
@@ -41,6 +41,41 @@ export default function Inspection() {
     }
   }
 
+  // 重置器械数据（强制同步ABC区29个器械）
+  const handleResetEquipment = async () => {
+    try {
+      const res = await Taro.showModal({
+        title: '确认重置',
+        content: '将删除现有器械数据，重新初始化ABC区的29个器械。确定要重置吗？',
+        confirmText: '确定重置',
+        confirmColor: '#ef4444'
+      })
+      
+      if (!res.confirm) return
+      
+      Taro.showLoading({ title: '重置中...' })
+      const result = await Network.request({
+        url: '/api/inspection/init-equipment',
+        method: 'POST',
+        data: { force: true }
+      })
+      Taro.hideLoading()
+      
+      console.log('重置结果:', result.data)
+      Taro.showToast({ 
+        title: result.data?.data?.message || '重置成功', 
+        icon: 'success' 
+      })
+      
+      // 刷新数据
+      fetchRecords()
+    } catch (error) {
+      Taro.hideLoading()
+      console.error('重置失败:', error)
+      Taro.showToast({ title: '重置失败', icon: 'none' })
+    }
+  }
+
   const filteredRecords = filterStatus === 'all' 
     ? records 
     : records.filter(r => r.status === filterStatus)
@@ -73,11 +108,23 @@ export default function Inspection() {
       </View>
 
       {/* 添加按钮 */}
-      <View className="px-4 py-3">
-        <Button className="w-full" onClick={() => navigateTo('/pages/inspection/add')}>
-          <Plus size={18} color="#ffffff" />
-          <Text className="ml-2 text-white">新增巡检记录</Text>
-        </Button>
+      <View className="px-4 pb-3">
+        <View className="flex gap-2">
+          <View className="flex-1">
+            <Button className="w-full" onClick={() => navigateTo('/pages/inspection/add')}>
+              <Plus size={18} color="#ffffff" />
+              <Text className="ml-2 text-white">新增巡检记录</Text>
+            </Button>
+          </View>
+          <Button 
+            className="bg-orange-500 border-orange-500" 
+            variant="outline"
+            onClick={handleResetEquipment}
+          >
+            <RotateCcw size={16} color="#ffffff" />
+            <Text className="ml-1 text-white text-sm">重置器械</Text>
+          </Button>
+        </View>
       </View>
 
       {/* 筛选标签 */}

@@ -54,17 +54,22 @@ export class InspectionService {
   }
 
   // 初始化默认器械
-  async initDefaultEquipment() {
-    const existing = await this.supabase
-      .from('equipment_list')
-      .select('id');
-    
-    // 如果已有数据则跳过
-    if (existing.data && existing.data.length > 0) {
-      return { success: true, message: '器械已存在' };
+  async initDefaultEquipment(force = false) {
+    // 如果 force=true，删除旧数据重新初始化
+    if (force) {
+      await this.supabase.from('equipment_list').delete().neq('id', 0);
+    } else {
+      const existing = await this.supabase
+        .from('equipment_list')
+        .select('id');
+      
+      // 如果已有数据则跳过
+      if (existing.data && existing.data.length > 0) {
+        return { success: true, message: '器械已存在，如需重置请使用 force=true' };
+      }
     }
 
-    // 默认器械配置（与前端保持一致）
+    // 默认器械配置（与前端保持一致，共29个）
     const defaultEquipment = [
       // A区器械（跑步机——龙门架）
       { name: '跑步机 1号', area: 'A' },
@@ -105,7 +110,7 @@ export class InspectionService {
       .insert(defaultEquipment)
       .select();
 
-    return { success: true, data: result.data };
+    return { success: true, message: `已初始化 ${defaultEquipment.length} 个器械`, data: result.data };
   }
 
   // 获取巡检列表

@@ -14,8 +14,8 @@ export class InspectionController {
 
   // 初始化默认器械
   @Post('init-equipment')
-  async initEquipment() {
-    const result = await this.inspectionService.initDefaultEquipment();
+  async initEquipment(@Query('force') force?: string) {
+    const result = await this.inspectionService.initDefaultEquipment(force === 'true');
     return { code: 200, msg: 'success', data: result };
   }
 
