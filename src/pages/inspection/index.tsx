@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { View, Text } from '@tarojs/components'
 import Taro from '@tarojs/taro'
-import { Wrench, Plus } from 'lucide-react-taro'
+import { Plus } from 'lucide-react-taro'
 import { Network } from '@/network'
 
 interface InspectionRecord {

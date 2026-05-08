@@ -1,131 +1,116 @@
 import { useState, useEffect } from 'react'
-import { View, Text, ScrollView } from '@tarojs/components'
 import Taro from '@tarojs/taro'
-import { BookOpen, Wrench, CircleCheck, MessageSquare } from 'lucide-react-taro'
-import { Input } from '@/components/ui/input'
+import { View, Text, ScrollView } from '@tarojs/components'
+import { BookOpen, Wrench, MessageSquare, Sparkles } from 'lucide-react-taro'
 import { Network } from '@/network'
-
-interface Stat {
-  totalEquipment: number
-  todayInspected: number
-  todayPending: number
-  todayFault: number
-}
-
-interface UninspectedEquipment {
-  id: number
-  name: string
-  area: string
-}
+import FeedbackSheet from '@/components/feedback-sheet'
 
 export default function Index() {
-  const [stats, setStats] = useState<Stat>({ totalEquipment: 0, todayInspected: 0, todayPending: 0, todayFault: 0 })
-  const [uninspectedList, setUninspectedList] = useState<UninspectedEquipment[]>([])
-  const [, setLoading] = useState(true)
+  const [stats, setStats] = useState({
+    totalEquipment: 0,
+    todayInspected: 0,
+    todayPending: 0,
+    todayFault: 0,
+  })
+  const [uninspectedList, setUninspectedList] = useState<any[]>([])
   const [showFeedback, setShowFeedback] = useState(false)
-  const [feedbackType, setFeedbackType] = useState<'suggestion' | 'need' | 'problem'>('suggestion')
-  const [feedbackContent, setFeedbackContent] = useState('')
 
   const fetchData = async () => {
     try {
-      setLoading(true)
-      const [statsRes, uninspectedRes] = await Promise.all([
+      const [statsRes, listRes] = await Promise.all([
         Network.request({ url: '/api/inspection/stats' }),
-        Network.request({ url: '/api/inspection/today-uninspected' })
+        Network.request({ url: '/api/inspection/today-uninspected' }),
       ])
       
-      if (statsRes.data?.code === 200) {
-        const data = statsRes.data.data
-        setStats({
-          totalEquipment: data.totalEquipment || 0,
-          todayInspected: data.todayInspected || 0,
-          todayPending: data.todayPending || 0,
-          todayFault: data.todayFault || 0,
-        })
-      }
-      if (uninspectedRes.data?.code === 200) {
-        const list = uninspectedRes.data.data?.equipment || uninspectedRes.data.data || []
-        setUninspectedList(Array.isArray(list) ? list : [])
-      }
+      const statsData = statsRes.data?.data || {}
+      setStats({
+        totalEquipment: statsData.totalEquipment || 0,
+        todayInspected: statsData.todayInspected || 0,
+        todayPending: statsData.todayPending || 0,
+        todayFault: statsData.todayFault || 0,
+      })
+      
+      const list = listRes.data?.data?.equipment || []
+      setUninspectedList(list)
     } catch (err) {
       console.error('获取数据失败', err)
-    } finally {
-      setLoading(false)
     }
   }
 
-  // 页面加载时获取数据
   useEffect(() => {
     fetchData()
-    // 每2秒刷新一次数据
-    const timer = setInterval(fetchData, 2000)
-    return () => clearInterval(timer)
+    Taro.eventCenter.on('reloadHome', fetchData)
+    return () => {
+      Taro.eventCenter.off('reloadHome', fetchData)
+    }
   }, [])
 
-  const navigateTo = (path: string) => {
-    if (path.startsWith('/')) {
-      const tabBarPages = ['/pages/index/index', '/pages/training/index', '/pages/inspection/index', '/pages/profile/index']
-      if (tabBarPages.includes(path)) {
-        Taro.switchTab({ url: path })
-      } else {
-        Taro.navigateTo({ url: path })
-      }
-    }
-  }
-
-  const handleSubmitFeedback = async () => {
-    if (!feedbackContent.trim()) {
-      Taro.showToast({ title: '请输入反馈内容', icon: 'none' })
-      return
-    }
-    try {
-      const res = await Network.request({
-        url: '/api/feedback/submit',
-        method: 'POST',
-        data: { content: feedbackContent.trim(), type: feedbackType }
-      })
-      if (res.data?.code === 200) {
-        Taro.showToast({ title: '提交成功，感谢您的反馈！', icon: 'success' })
-        setShowFeedback(false)
-        setFeedbackContent('')
-        setFeedbackType('suggestion')
-      } else {
-        Taro.showToast({ title: res.data?.msg || '提交失败', icon: 'none' })
-      }
-    } catch {
-      Taro.showToast({ title: '提交失败，请重试', icon: 'none' })
+  const navigateTo = (url: string) => {
+    const tabBarPages = ['/pages/index/index', '/pages/training/index', '/pages/inspection/index', '/pages/profile/index']
+    if (tabBarPages.includes(url)) {
+      Taro.switchTab({ url })
+    } else {
+      Taro.navigateTo({ url })
     }
   }
 
   return (
-    <View className="min-h-screen bg-slate-100">
+    <View className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100">
       <ScrollView scrollY className="h-screen pb-safe">
-        {/* 顶部欢迎语 */}
-        <View className="bg-gradient-to-r from-slate-700 to-slate-600 px-4 py-6 shadow-lg">
-          <Text className="block text-white text-lg font-medium mb-1">不用和别人比</Text>
-          <Text className="block text-blue-300 text-base">每天只赢自己一小时</Text>
+        {/* 励志标语区域 */}
+        <View className="bg-gradient-to-br from-orange-500 via-orange-400 to-red-500 px-5 py-8 relative overflow-hidden">
+          {/* 装饰元素 */}
+          <View className="absolute top-4 right-4 opacity-20">
+            <Sparkles size={80} color="#fff" />
+          </View>
+          <View className="absolute bottom-2 left-4 opacity-10">
+            <Sparkles size={60} color="#fff" />
+          </View>
+          
+          {/* 引号装饰 */}
+          <Text className="block text-6xl text-white opacity-30 font-serif leading-none mb-1">&ldquo;</Text>
+          
+          {/* 标语主文 */}
+          <View className="relative z-10">
+            <Text className="block text-white text-xl font-bold leading-relaxed mb-2 drop-shadow-lg">
+              不用和别人比
+            </Text>
+            <Text className="block text-yellow-200 text-lg font-semibold leading-relaxed mb-1">
+              每天只赢自己一小时
+            </Text>
+          </View>
+          
+          {/* 励志小标签 */}
+          <View className="flex flex-row items-center gap-2 mt-4">
+            <View className="bg-white bg-opacity-20 rounded-full px-3 py-1">
+              <Text className="block text-white text-xs">坚持 · 突破 · 成长</Text>
+            </View>
+          </View>
         </View>
 
         {/* 今日概况 */}
-        <View className="px-4 -mt-4">
-          <View className="bg-white rounded-2xl shadow-md p-4 mb-4">
-            <Text className="block text-base font-semibold text-slate-800 mb-3">今日概况</Text>
+        <View className="px-4 -mt-3">
+          <View className="bg-white rounded-2xl shadow-lg p-4 mb-4 border border-slate-100">
+            <View className="flex items-center gap-2 mb-4">
+              <View className="w-1 h-5 bg-gradient-to-b from-orange-500 to-red-500 rounded-full" />
+              <Text className="block text-base font-bold text-slate-800">今日概况</Text>
+            </View>
             <View className="grid grid-cols-2 gap-3">
-              <View className="bg-blue-50 rounded-xl p-3">
-                <Text className="block text-2xl font-bold text-blue-600">{stats.totalEquipment}</Text>
-                <Text className="block text-xs text-blue-500 mt-1">器械总数</Text>
+              <View className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-3 border border-blue-200">
+                <Text className="block text-2xl font-black text-blue-600">{stats.totalEquipment}</Text>
+                <Text className="block text-xs text-blue-500 mt-1 font-medium">器械总数</Text>
               </View>
-              <View className="bg-green-50 rounded-xl p-3">
-                <Text className="block text-2xl font-bold text-green-600">{stats.todayInspected}</Text>
-                <Text className="block text-xs text-green-500 mt-1">今日已巡检</Text>
+              <View className="bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-3 border border-green-200">
+                <Text className="block text-2xl font-black text-green-600">{stats.todayInspected}</Text>
+                <Text className="block text-xs text-green-500 mt-1 font-medium">今日已巡检</Text>
               </View>
-              <View className="bg-orange-50 rounded-xl p-3">
-                <Text className="block text-2xl font-bold text-orange-600">{stats.todayPending}</Text>
-                <Text className="block text-xs text-orange-500 mt-1">待维修</Text>
+              <View className="bg-gradient-to-br from-orange-50 to-orange-100 rounded-xl p-3 border border-orange-200">
+                <Text className="block text-2xl font-black text-orange-600">{stats.todayPending}</Text>
+                <Text className="block text-xs text-orange-500 mt-1 font-medium">待维修</Text>
               </View>
-              <View className="bg-red-50 rounded-xl p-3">
-                <Text className="block text-2xl font-bold text-red-600">{stats.todayFault}</Text>
-                <Text className="block text-xs text-red-500 mt-1">故障</Text>
+              <View className="bg-gradient-to-br from-red-50 to-red-100 rounded-xl p-3 border border-red-200">
+                <Text className="block text-2xl font-black text-red-600">{stats.todayFault}</Text>
+                <Text className="block text-xs text-red-500 mt-1 font-medium">故障</Text>
               </View>
             </View>
           </View>
@@ -133,135 +118,95 @@ export default function Index() {
 
         {/* 快捷入口 */}
         <View className="px-4 mb-4">
-          <Text className="block text-sm font-medium text-slate-600 mb-3">快捷入口</Text>
+          <View className="flex items-center gap-2 mb-3">
+            <View className="w-1 h-5 bg-gradient-to-b from-orange-500 to-red-500 rounded-full" />
+            <Text className="block text-sm font-bold text-slate-800">快捷入口</Text>
+          </View>
           <View className="grid grid-cols-3 gap-3">
             <View 
-              className="bg-white rounded-xl p-4 shadow-sm flex flex-col items-center"
+              className="bg-white rounded-xl p-4 shadow-sm flex flex-col items-center border border-slate-100"
               onClick={() => navigateTo('/pages/training/index')}
             >
-              <View className="w-12 h-12 rounded-full bg-amber-100 flex items-center justify-center mb-2">
-                <BookOpen size={24} color="#d97706" />
+              <View className="w-14 h-14 rounded-full bg-gradient-to-br from-amber-100 to-amber-200 flex items-center justify-center mb-2 shadow-sm">
+                <BookOpen size={26} color="#d97706" />
               </View>
-              <Text className="block text-xs text-slate-700 font-medium">培训资料</Text>
+              <Text className="block text-xs text-slate-700 font-semibold">培训资料</Text>
             </View>
             <View 
-              className="bg-white rounded-xl p-4 shadow-sm flex flex-col items-center"
+              className="bg-white rounded-xl p-4 shadow-sm flex flex-col items-center border border-slate-100"
               onClick={() => navigateTo('/pages/inspection/index')}
             >
-              <View className="w-12 h-12 rounded-full bg-indigo-100 flex items-center justify-center mb-2">
-                <Wrench size={24} color="#4f46e5" />
+              <View className="w-14 h-14 rounded-full bg-gradient-to-br from-indigo-100 to-indigo-200 flex items-center justify-center mb-2 shadow-sm">
+                <Wrench size={26} color="#4f46e5" />
               </View>
-              <Text className="block text-xs text-slate-700 font-medium">器械巡检</Text>
+              <Text className="block text-xs text-slate-700 font-semibold">器械巡检</Text>
             </View>
             <View 
-              className="bg-white rounded-xl p-4 shadow-sm flex flex-col items-center"
+              className="bg-white rounded-xl p-4 shadow-sm flex flex-col items-center border border-slate-100"
               onClick={() => setShowFeedback(true)}
             >
-              <View className="w-12 h-12 rounded-full bg-purple-100 flex items-center justify-center mb-2">
-                <MessageSquare size={24} color="#9333ea" />
+              <View className="w-14 h-14 rounded-full bg-gradient-to-br from-purple-100 to-purple-200 flex items-center justify-center mb-2 shadow-sm">
+                <MessageSquare size={26} color="#9333ea" />
               </View>
-              <Text className="block text-xs text-slate-700 font-medium">匿名反馈</Text>
+              <Text className="block text-xs text-slate-700 font-semibold">匿名反馈</Text>
             </View>
           </View>
         </View>
 
         {/* 未巡检器械 */}
-        <View className="px-4 pb-4">
+        <View className="px-4 pb-6">
           <View className="flex items-center justify-between mb-3">
-            <Text className="block text-sm font-medium text-slate-600">未巡检器械</Text>
-            <Text className="block text-xs text-slate-400">{uninspectedList.length} 台</Text>
+            <View className="flex items-center gap-2">
+              <View className="w-1 h-5 bg-gradient-to-b from-orange-500 to-red-500 rounded-full" />
+              <Text className="block text-sm font-bold text-slate-800">未巡检器械</Text>
+            </View>
+            <View className="bg-orange-100 rounded-full px-3 py-1">
+              <Text className="block text-xs text-orange-600 font-semibold">{uninspectedList.length} 台</Text>
+            </View>
           </View>
           
           {uninspectedList.length > 0 ? (
-            <View className="bg-white rounded-xl shadow-sm overflow-hidden">
+            <View className="bg-white rounded-xl shadow-sm overflow-hidden border border-slate-100">
               {uninspectedList.map((item, index) => (
                 <View 
                   key={item.id || index}
-                  className={`p-3 flex items-center justify-between ${index < uninspectedList.length - 1 ? 'border-b border-slate-100' : ''}`}
+                  className={`p-4 flex items-center justify-between ${index < uninspectedList.length - 1 ? 'border-b border-slate-100' : ''}`}
                 >
                   <View className="flex items-center gap-3">
-                    <View className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-medium ${
-                      item.area === 'A' ? 'bg-blue-100 text-blue-600' :
-                      item.area === 'B' ? 'bg-green-100 text-green-600' :
-                      item.area === 'C' ? 'bg-amber-100 text-amber-600' :
-                      'bg-slate-100 text-slate-600'
+                    <View className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold shadow-sm ${
+                      item.area === 'A' ? 'bg-gradient-to-br from-blue-400 to-blue-600 text-white' :
+                      item.area === 'B' ? 'bg-gradient-to-br from-green-400 to-green-600 text-white' :
+                      item.area === 'C' ? 'bg-gradient-to-br from-amber-400 to-amber-600 text-white' :
+                      'bg-slate-200 text-slate-600'
                     }`}
                     >
                       {item.area || '?'}
                     </View>
                     <View>
-                      <Text className="block text-sm text-slate-800">{item.name}</Text>
+                      <Text className="block text-sm text-slate-800 font-medium">{item.name}</Text>
                       <Text className="block text-xs text-slate-400">{item.area ? `${item.area}区` : '未分区'}</Text>
                     </View>
                   </View>
+                  <View className="w-2 h-2 rounded-full bg-orange-400" />
                 </View>
               ))}
             </View>
           ) : (
-            <View className="bg-white rounded-xl p-6 shadow-sm flex flex-col items-center">
-              <CircleCheck size={40} color="#22c55e" />
-              <Text className="block text-sm text-slate-600 mt-2">今日巡检已全部完成</Text>
+            <View className="bg-white rounded-xl p-8 shadow-sm border border-slate-100 flex flex-col items-center">
+              <Text className="block text-slate-400 text-sm">今日巡检已完成</Text>
             </View>
           )}
         </View>
-
-        {/* 反馈弹窗 */}
-        {showFeedback && (
-          <View className="fixed inset-0 bg-black bg-opacity-50 flex items-end z-50" onClick={() => setShowFeedback(false)}>
-            <View className="w-full bg-white rounded-t-3xl p-6 pb-safe" onClick={(e) => e.stopPropagation()}>
-              <View className="w-12 h-1 bg-slate-300 rounded-full mx-auto mb-4" />
-              <Text className="block text-lg font-semibold text-slate-800 mb-4">匿名反馈</Text>
-              
-              <View className="flex gap-2 mb-4">
-                {[
-                  { key: 'suggestion', label: '建议', color: 'blue' },
-                  { key: 'need', label: '需求', color: 'purple' },
-                  { key: 'problem', label: '问题', color: 'red' },
-                ].map((item) => (
-                  <View
-                    key={item.key}
-                    className={`px-4 py-2 rounded-full text-sm ${
-                      feedbackType === item.key
-                        ? 'bg-blue-500 text-white'
-                        : 'bg-slate-100 text-slate-600'
-                    }`}
-                    onClick={() => setFeedbackType(item.key as 'suggestion' | 'need' | 'problem')}
-                  >
-                    {item.label}
-                  </View>
-                ))}
-              </View>
-
-              <View className="bg-slate-50 rounded-2xl p-4 mb-4">
-                <Input
-                  className="w-full bg-transparent text-sm"
-                  placeholder="请输入您的反馈..."
-                  value={feedbackContent}
-                  onInput={(e: any) => setFeedbackContent(e.detail.value)}
-                  maxlength={500}
-                />
-              </View>
-
-              <View className="flex gap-3">
-                <View className="flex-1" onClick={() => setShowFeedback(false)}>
-                  <View className="w-full py-3 rounded-xl bg-slate-100 text-center">
-                    <Text className="block text-slate-600">取消</Text>
-                  </View>
-                </View>
-                <View className="flex-1" onClick={handleSubmitFeedback}>
-                  <View className="w-full py-3 rounded-xl bg-blue-500 text-center">
-                    <Text className="block text-white">提交反馈</Text>
-                  </View>
-                </View>
-              </View>
-            </View>
-          </View>
-        )}
       </ScrollView>
+
+      <FeedbackSheet 
+        open={showFeedback} 
+        onClose={() => setShowFeedback(false)} 
+      />
     </View>
   )
 }
 
-
-
-
+definePageConfig({
+  navigationBarTitleText: '首页',
+})
