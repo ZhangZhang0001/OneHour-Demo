@@ -6,6 +6,8 @@ export default defineAppConfig({
     'pages/inspection/index',
     'pages/inspection/add',
     'pages/inspection/detail',
+    'pages/inspection/history',
+    'pages/feedback/index',
     'pages/profile/index'
   ],
   window: {
