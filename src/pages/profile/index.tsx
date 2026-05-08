@@ -1,10 +1,7 @@
 import { useState, useEffect } from 'react'
 import { View, Text } from '@tarojs/components'
 import Taro from '@tarojs/taro'
-import { Card, CardContent } from '@/components/ui/card'
-import { Avatar } from '@/components/ui/avatar'
-import { Separator } from '@/components/ui/separator'
-import { Building2, Phone, Info, MessageSquare, ClipboardList, ArrowRight, Dumbbell } from 'lucide-react-taro'
+import { Building2, Phone, MessageSquare, ClipboardList, ArrowRight, Dumbbell } from 'lucide-react-taro'
 import { Network } from '@/network'
 
 export default function Profile() {
@@ -40,23 +37,23 @@ export default function Profile() {
     <View className="min-h-screen bg-slate-50 pb-safe">
       <View className="p-4">
         {/* 用户信息卡片 */}
-        <Card className="mb-4">
-          <CardContent className="p-6">
+        <View className="bg-white rounded-lg border border-slate-100 shadow-sm mb-4">
+          <View className="p-6">
             <View className="flex items-center gap-4">
-              <Avatar className="w-20 h-20 bg-white">
+              <View className="w-20 h-20 bg-white rounded-full flex items-center justify-center">
                 <Dumbbell size={40} color="#3b82f6" />
-              </Avatar>
+              </View>
               <View>
                 <Text className="block text-xl font-semibold text-slate-800">健身房员工</Text>
                 <Text className="block text-sm text-slate-500 mt-1">管理员</Text>
               </View>
             </View>
-          </CardContent>
-        </Card>
+          </View>
+        </View>
 
         {/* 数据管理入口 */}
-        <Card className="mb-4">
-          <CardContent className="p-4">
+        <View className="bg-white rounded-lg border border-slate-100 shadow-sm mb-4">
+          <View className="p-4">
             <Text className="block text-base font-medium text-slate-800 mb-4">数据管理</Text>
             
             <View className="space-y-3">
@@ -80,7 +77,7 @@ export default function Profile() {
                 </View>
               </View>
 
-              <Separator />
+              <View className="h-px bg-slate-100" />
 
               {/* 巡检记录历史 */}
               <View 
@@ -97,12 +94,12 @@ export default function Profile() {
                 <ArrowRight size={18} color="#94a3b8" />
               </View>
             </View>
-          </CardContent>
-        </Card>
+          </View>
+        </View>
 
         {/* 健身房信息 */}
-        <Card className="mb-4">
-          <CardContent className="p-4">
+        <View className="bg-white rounded-lg border border-slate-100 shadow-sm mb-4">
+          <View className="p-4">
             <Text className="block text-base font-medium text-slate-800 mb-4">健身房信息</Text>
             
             <View className="space-y-3">
@@ -116,37 +113,21 @@ export default function Profile() {
                 </View>
               </View>
               
-              <Separator />
+              <View className="h-px bg-slate-100" />
               
               <View className="flex items-center gap-3">
-                <View className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center">
-                  <Phone size={16} color="#1e40af" />
+                <View className="w-8 h-8 rounded-lg bg-green-50 flex items-center justify-center">
+                  <Phone size={16} color="#16a34a" />
                 </View>
                 <View className="flex-1">
                   <Text className="block text-xs text-slate-400">联系电话</Text>
                   <Text className="block text-sm text-slate-800">18726269055</Text>
                 </View>
               </View>
-              
-              <Separator />
-              
-              <View className="flex items-center gap-3">
-                <View className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center">
-                  <Info size={16} color="#1e40af" />
-                </View>
-                <View className="flex-1">
-                  <Text className="block text-xs text-slate-400">版本信息</Text>
-                  <Text className="block text-sm text-slate-800">v1.0.0</Text>
-                </View>
-              </View>
             </View>
-          </CardContent>
-        </Card>
+          </View>
+        </View>
       </View>
     </View>
   )
 }
-
-definePageConfig({
-  navigationBarTitleText: '我的',
-})

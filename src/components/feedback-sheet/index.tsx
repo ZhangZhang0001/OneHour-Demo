@@ -2,8 +2,7 @@ import { useState } from 'react'
 import Taro from '@tarojs/taro'
 import { View, Text, Textarea } from '@tarojs/components'
 import { Network } from '@/network'
-import { Button } from '@/components/ui/button'
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet'
+import { X } from 'lucide-react-taro'
 
 interface FeedbackSheetProps {
   open: boolean
@@ -13,6 +12,8 @@ interface FeedbackSheetProps {
 export default function FeedbackSheet({ open, onClose }: FeedbackSheetProps) {
   const [content, setContent] = useState('')
   const [loading, setLoading] = useState(false)
+
+  if (!open) return null
 
   const handleContentChange = (e: any) => {
     setContent(e.target.value)
@@ -29,12 +30,13 @@ export default function FeedbackSheet({ open, onClose }: FeedbackSheetProps) {
       await Network.request({
         url: '/api/feedback/submit',
         method: 'POST',
-        data: { content },
+        data: { content: content.trim() },
       })
       Taro.showToast({ title: '提交成功', icon: 'success' })
       setContent('')
       onClose()
     } catch (err) {
+      console.error('提交反馈失败', err)
       Taro.showToast({ title: '提交失败', icon: 'none' })
     } finally {
       setLoading(false)
@@ -42,34 +44,44 @@ export default function FeedbackSheet({ open, onClose }: FeedbackSheetProps) {
   }
 
   return (
-    <Sheet open={open} onOpenChange={(val) => !val && onClose()}>
-      <SheetContent className="sm:max-w-lg">
-        <SheetHeader>
-          <SheetTitle>匿名反馈</SheetTitle>
-        </SheetHeader>
-        <View className="mt-6 space-y-4">
-          <Text className="block text-sm text-slate-600">
-            欢迎提出您的宝贵意见，我们会认真对待每一条反馈。
-          </Text>
-          <View className="bg-slate-50 rounded-2xl p-4">
-            <Textarea
-              value={content}
-              placeholder="请输入您的反馈..."
-              maxlength={500}
-              onInput={handleContentChange}
-              style={{ width: '100%', minHeight: '120px', backgroundColor: 'transparent' }}
-            />
-          </View>
-          <View className="flex justify-end gap-3">
-            <Button variant="outline" onClick={onClose}>
-              取消
-            </Button>
-            <Button onClick={handleSubmit} disabled={loading}>
-              {loading ? '提交中...' : '提交'}
-            </Button>
+    <View className="fixed inset-0 z-50 flex items-end justify-center">
+      {/* 遮罩 */}
+      <View 
+        className="absolute inset-0 bg-black bg-opacity-50" 
+        onClick={onClose}
+      />
+      {/* 内容 */}
+      <View className="relative w-full bg-white rounded-t-2xl p-4 pb-safe">
+        {/* 标题栏 */}
+        <View className="flex items-center justify-between mb-4">
+          <Text className="block text-lg font-semibold text-gray-900">匿名反馈</Text>
+          <View 
+            className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center"
+            onClick={onClose}
+          >
+            <X size={18} color="#666" />
           </View>
         </View>
-      </SheetContent>
-    </Sheet>
+        
+        {/* 输入框 */}
+        <View className="bg-gray-50 rounded-xl p-3 mb-4">
+          <Textarea
+            className="w-full text-sm text-gray-800 min-h-32"
+            placeholder="请输入您的反馈内容..."
+            value={content}
+            onInput={handleContentChange}
+            maxlength={500}
+          />
+        </View>
+        
+        {/* 提交按钮 */}
+        <View 
+          className={`rounded-xl py-3 text-center ${loading ? 'bg-gray-400' : 'bg-blue-500'}`}
+          onClick={loading ? undefined : handleSubmit}
+        >
+          <Text className="block text-white font-medium">{loading ? '提交中...' : '提交反馈'}</Text>
+        </View>
+      </View>
+    </View>
   )
 }
