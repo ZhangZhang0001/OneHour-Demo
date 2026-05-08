@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Param, Query } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Query, BadRequestException } from '@nestjs/common';
 import { InspectionService } from './inspection.service';
 
 @Controller('inspection')
@@ -91,7 +91,7 @@ export class InspectionController {
     return { code: 200, msg: 'success', data: { count: data.todayPending } };
   }
 
-  // 新增巡检记录（支持批量）
+  // 新增巡检记录
   @Post('add')
   async add(@Body() body: {
     inspector: string;
@@ -100,29 +100,26 @@ export class InspectionController {
     status: 'normal' | 'pending' | 'fault';
     remark?: string;
   }) {
-    const results: any[] = [];
-    
-    for (const equipmentId of body.equipmentIds) {
-      // 获取设备名称
-      const equipment = await this.inspectionService.getEquipmentById(equipmentId);
-      if (!equipment) continue;
-      
-      const data = await this.inspectionService.addInspection({
-        equipment_name: equipment.name,
-        equipment_id: equipmentId,
-        area: body.area,
-        status: body.status,
-        remark: body.remark,
-        inspector: body.inspector,
-      });
-      
-      // 更新设备列表中的状态和巡检时间
-      await this.inspectionService.updateEquipmentStatus(equipmentId, body.status);
-      
-      results.push(data);
+    // 验证输入
+    if (!body.inspector) {
+      throw new BadRequestException('请输入检查人姓名');
     }
-    
-    return { code: 200, msg: 'success', data: { count: results.length } };
+    if (!body.equipmentIds || body.equipmentIds.length === 0) {
+      throw new BadRequestException('请至少选择一个器械');
+    }
+
+    // 批量插入巡检记录
+    const equipmentNames = await this.inspectionService.getEquipmentNamesByIds(body.equipmentIds);
+    const result = await this.inspectionService.addInspection({
+      equipmentIds: body.equipmentIds,
+      equipmentNames,
+      area: body.area,
+      status: body.status,
+      remark: body.remark,
+      inspector: body.inspector,
+    });
+
+    return { code: 200, msg: 'success', data: { count: result } };
   }
 
   // 获取巡检详情

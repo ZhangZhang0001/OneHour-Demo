@@ -131,6 +131,73 @@ export class InspectionService {
     return result.data || [];
   }
 
+  // 根据ID列表获取器械名称
+  async getEquipmentNamesByIds(ids: number[]): Promise<string[]> {
+    const { data, error } = await this.supabase
+      .from('equipment_list')
+      .select('name')
+      .in('id', ids);
+
+    if (error) {
+      console.error('获取器械名称失败:', error);
+      return [];
+    }
+
+    return (data || []).map(item => item.name);
+  }
+
+  // 添加巡检记录（支持批量）
+  async addInspection(data: {
+    equipmentIds: number[];
+    equipmentNames?: string[];
+    area: string;
+    status: string;
+    remark?: string;
+    inspector: string;
+  }) {
+    const { equipmentIds, equipmentNames, area, status, remark, inspector } = data;
+    const today = this.getToday();
+
+    // 为每个器械创建巡检记录
+    const records = equipmentIds.map((id, index) => ({
+      equipment_id: id,
+      equipment_name: equipmentNames?.[index] || '',
+      area,
+      status,
+      remark: remark || null,
+      inspector,
+      inspection_date: today,
+    }));
+
+    // 批量插入巡检记录
+    const result = await this.supabase
+      .from('equipment_inspections')
+      .insert(records)
+      .select();
+
+    if (result.error) {
+      throw new Error(`添加巡检记录失败: ${result.error.message}`);
+    }
+
+    // 同时更新器械表中的状态
+    for (const equipmentId of equipmentIds) {
+      await this.supabase
+        .from('equipment_list')
+        .update({
+          status,
+          last_inspection_date: today,
+        })
+        .eq('id', equipmentId);
+    }
+
+    return {
+      success: true,
+      message: `成功添加 ${records.length} 条巡检记录`,
+      count: records.length,
+      data: result.data,
+    };
+  }
+
   // 获取待处理巡检（待维修+故障）
   async getPendingInspections() {
     const result = await this.supabase
@@ -256,34 +323,6 @@ export class InspectionService {
       todayFault,
       todayUninspected: totalEquipment - todayInspected,
     };
-  }
-
-  // 新增巡检记录
-  async addInspection(data: {
-    equipment_name: string;
-    equipment_id?: number;
-    area: string;
-    status: string;
-    remark?: string;
-    inspector: string;
-  }) {
-    const today = this.getToday();
-    
-    const result = await this.supabase
-      .from('equipment_inspections')
-      .insert({
-        equipment_name: data.equipment_name,
-        equipment_id: data.equipment_id,
-        area: data.area,
-        status: data.status,
-        remark: data.remark || null,
-        inspector: data.inspector,
-        inspection_date: today,
-      })
-      .select()
-      .single();
-    
-    return result.data;
   }
 
   // 根据ID获取设备信息
