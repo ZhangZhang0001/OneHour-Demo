@@ -285,6 +285,34 @@ export class InspectionService {
     
     return result.data;
   }
+
+  // 根据ID获取设备信息
+  async getEquipmentById(id: number) {
+    const result = await this.supabase
+      .from('equipment_list')
+      .select('*')
+      .eq('id', id)
+      .single();
+    
+    return result.data;
+  }
+
+  // 更新设备状态和巡检时间
+  async updateEquipmentStatus(id: number, status: string) {
+    const today = this.getToday();
+    
+    const result = await this.supabase
+      .from('equipment_list')
+      .update({
+        status: status,
+        last_inspection_date: today,
+      })
+      .eq('id', id)
+      .select()
+      .single();
+    
+    return result.data;
+  }
 	
   // 获取巡检详情
   async getInspectionDetail(id: number) {

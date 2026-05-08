@@ -91,18 +91,38 @@ export class InspectionController {
     return { code: 200, msg: 'success', data: { count: data.todayPending } };
   }
 
-  // 新增巡检记录
+  // 新增巡检记录（支持批量）
   @Post('add')
   async add(@Body() body: {
-    equipment_name: string;
-    equipment_id?: number;
+    inspector: string;
     area: string;
+    equipmentIds: number[];
     status: 'normal' | 'pending' | 'fault';
     remark?: string;
-    inspector: string;
   }) {
-    const data = await this.inspectionService.addInspection(body);
-    return { code: 200, msg: 'success', data };
+    const results = [];
+    
+    for (const equipmentId of body.equipmentIds) {
+      // 获取设备名称
+      const equipment = await this.inspectionService.getEquipmentById(equipmentId);
+      if (!equipment) continue;
+      
+      const data = await this.inspectionService.addInspection({
+        equipment_name: equipment.name,
+        equipment_id: equipmentId,
+        area: body.area,
+        status: body.status,
+        remark: body.remark,
+        inspector: body.inspector,
+      });
+      
+      // 更新设备列表中的状态和巡检时间
+      await this.inspectionService.updateEquipmentStatus(equipmentId, body.status);
+      
+      results.push(data);
+    }
+    
+    return { code: 200, msg: 'success', data: { count: results.length } };
   }
 
   // 获取巡检详情
