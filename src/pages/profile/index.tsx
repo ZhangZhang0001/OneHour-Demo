@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import Taro from '@tarojs/taro'
 import { View, Text } from '@tarojs/components'
-import { Dumbbell, Phone, Settings, Bell, FileText, Info, ChevronRight } from 'lucide-react-taro'
+import { Dumbbell, Phone, MessageSquare, LogOut } from 'lucide-react-taro'
 
 interface GymInfo {
   name: string
@@ -21,13 +21,6 @@ export default function Profile() {
       setUserInfo(userData)
     }
   }, [])
-
-  const menuItems = [
-    { icon: Bell, label: '消息通知', color: 'bg-blue-50', iconColor: '#3b82f6' },
-    { icon: FileText, label: '帮助与反馈', color: 'bg-green-50', iconColor: '#16a34a' },
-    { icon: Settings, label: '设置', color: 'bg-slate-50', iconColor: '#64748b' },
-    { icon: Info, label: '关于我们', color: 'bg-purple-50', iconColor: '#9333ea' },
-  ]
 
   return (
     <View className="min-h-screen bg-slate-50 pb-safe">
@@ -78,20 +71,23 @@ export default function Profile() {
       {/* 功能菜单 */}
       <View className="px-4 mt-4">
         <View className="bg-white rounded-2xl overflow-hidden">
-          {menuItems.map((item, index) => (
-            <View 
-              key={item.label}
-              className={`flex items-center justify-between px-5 py-4 ${index < menuItems.length - 1 ? 'border-b border-slate-100' : ''}`}
-            >
-              <View className="flex items-center gap-3">
-                <View className={`w-9 h-9 rounded-lg flex items-center justify-center ${item.color}`}>
-                  <item.icon size={18} color={item.iconColor} />
-                </View>
-                <Text className="block text-sm text-slate-700">{item.label}</Text>
+          <View className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
+            <View className="flex items-center gap-3">
+              <View className="w-9 h-9 rounded-lg bg-purple-50 flex items-center justify-center">
+                <MessageSquare size={18} color="#9333ea" />
               </View>
-              <ChevronRight size={18} color="#cbd5e1" />
+              <Text className="block text-sm text-slate-700">意见反馈</Text>
             </View>
-          ))}
+          </View>
+          
+          <View className="flex items-center justify-between px-5 py-4">
+            <View className="flex items-center gap-3">
+              <View className="w-9 h-9 rounded-lg bg-red-50 flex items-center justify-center">
+                <LogOut size={18} color="#dc2626" />
+              </View>
+              <Text className="block text-sm text-red-600">退出登录</Text>
+            </View>
+          </View>
         </View>
       </View>
 
