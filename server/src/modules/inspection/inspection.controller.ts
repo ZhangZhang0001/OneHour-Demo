@@ -100,7 +100,7 @@ export class InspectionController {
     status: 'normal' | 'pending' | 'fault';
     remark?: string;
   }) {
-    const results = [];
+    const results: any[] = [];
     
     for (const equipmentId of body.equipmentIds) {
       // 获取设备名称
