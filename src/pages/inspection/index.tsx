@@ -9,13 +9,13 @@ interface InspectionRecord {
   equipment_name: string
   equipment_id: number
   area: string
-  status: 'normal' | 'pending' | 'broken'
+  status: 'normal' | 'pending' | 'fault'
   remark: string
   inspector: string
   created_at: string
 }
 
-type FilterStatus = 'all' | 'normal' | 'pending' | 'broken'
+type FilterStatus = 'all' | 'normal' | 'pending' | 'fault'
 
 export default function Inspection() {
   const [records, setRecords] = useState<InspectionRecord[]>([])
@@ -53,7 +53,7 @@ export default function Inspection() {
         return { label: '正常', color: 'bg-green-100 text-green-700' }
       case 'pending':
         return { label: '待维修', color: 'bg-orange-100 text-orange-700' }
-      case 'broken':
+      case 'fault':
         return { label: '故障', color: 'bg-red-100 text-red-700' }
       default:
         return { label: '未知', color: 'bg-slate-100 text-slate-700' }
@@ -92,7 +92,7 @@ export default function Inspection() {
             { key: 'all', label: '全部' },
             { key: 'normal', label: '正常' },
             { key: 'pending', label: '待维修' },
-            { key: 'broken', label: '故障' }
+            { key: 'fault', label: '故障' }
           ].map(item => (
             <View 
               key={item.key}
@@ -133,7 +133,7 @@ export default function Inspection() {
             </View>
             <View className="text-center">
               <Text className="block text-2xl font-bold text-red-600">
-                {records.filter(r => r.status === 'broken').length}
+                {records.filter(r => r.status === 'fault').length}
               </Text>
               <Text className="block text-xs text-slate-500 mt-1">故障</Text>
             </View>
