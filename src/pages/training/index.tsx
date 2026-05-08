@@ -1,12 +1,10 @@
 import { useState, useEffect } from 'react'
 import { View, Text } from '@tarojs/components'
-import { useRouter } from '@tarojs/taro'
+import Taro from '@tarojs/taro'
 import { BookOpen, Plus, Search, ArrowRight } from 'lucide-react-taro'
-import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Network } from '@/network'
-import Taro from '@tarojs/taro'
 
 interface TrainingMaterial {
   id: number
@@ -17,7 +15,6 @@ interface TrainingMaterial {
 }
 
 export default function Training() {
-  const router = useRouter()
   const [materials, setMaterials] = useState<TrainingMaterial[]>([])
   const [loading, setLoading] = useState(true)
   const [searchKeyword, setSearchKeyword] = useState('')
@@ -50,47 +47,12 @@ export default function Training() {
 
   const navigateTo = (path: string) => {
     if (path.startsWith('/')) {
-      router.push(path)
+      Taro.navigateTo({ url: path })
     }
   }
 
-  const handleUpload = () => {
-    Taro.chooseMedia({
-      count: 1,
-      mediaType: ['file'],
-      success: async (res) => {
-        const tempFilePath = res.tempFiles[0].tempFilePath
-        const fileName = res.tempFiles[0].name || '未命名文件'
-        
-        Taro.showModal({
-          title: '上传培训资料',
-          editable: true,
-          placeholderText: '请输入资料标题',
-          success: async (modalRes) => {
-            if (modalRes.confirm && modalRes.content) {
-              try {
-                Taro.showLoading({ title: '上传中...' })
-                await Network.uploadFile({
-                  url: '/api/training/upload',
-                  filePath: tempFilePath,
-                  name: 'file',
-                  formData: {
-                    title: modalRes.content,
-                    description: ''
-                  }
-                })
-                Taro.showToast({ title: '上传成功', icon: 'success' })
-                fetchMaterials()
-              } catch {
-                Taro.showToast({ title: '上传失败', icon: 'none' })
-              } finally {
-                Taro.hideLoading()
-              }
-            }
-          }
-        })
-      }
-    })
+  const handleSearchChange = (value: string) => {
+    setSearchKeyword(value)
   }
 
   return (
@@ -107,7 +69,7 @@ export default function Training() {
           <Search size={18} color="#94a3b8" />
           <Input
             value={searchKeyword}
-            onChange={(e) => setSearchKeyword(e.detail.value)}
+            onInput={(e: { detail: { value: string } }) => handleSearchChange(e.detail.value)}
             placeholder="搜索培训资料..."
             className="flex-1 bg-transparent"
           />
@@ -116,9 +78,9 @@ export default function Training() {
 
       {/* 添加按钮 */}
       <View className="px-4 pb-3">
-        <Button className="w-full" onClick={handleUpload}>
-          <Plus size={18} />
-          <Text className="ml-2">上传培训资料</Text>
+        <Button className="w-full" onClick={() => Taro.showToast({ title: '上传功能开发中', icon: 'none' })}>
+          <Plus size={18} color="#ffffff" />
+          <Text className="ml-2 text-white">上传培训资料</Text>
         </Button>
       </View>
 
@@ -137,8 +99,8 @@ export default function Training() {
             >
               <View className="p-4">
                 <View className="flex items-start gap-3">
-                  <View className="w-12 h-12 rounded-xl bg-blue-100 flex items-center justify-center flex-shrink-0">
-                    <BookOpen size={24} color="#3b82f6" />
+                  <View className="w-12 h-12 rounded-xl bg-indigo-100 flex items-center justify-center flex-shrink-0">
+                    <BookOpen size={24} color="#6366f1" />
                   </View>
                   <View className="flex-1">
                     <Text className="block text-base font-medium text-slate-800">{material.title}</Text>

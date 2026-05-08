@@ -8,56 +8,41 @@ page {
   height: 100%;
 }
 
+/* 统一蓝灰色系设计 */
 :root,
 page,
 root-portal {
-  --background: lab(100% 0 0);
-  --foreground: lab(2.75381% 0 0);
+  /* 主色调 - 专业蓝 */
+  --primary: lab(45% -15 -45);
+  --primary-foreground: lab(98% 0 0);
+  
+  /* 次要色 - 浅蓝 */
+  --secondary: lab(96% -2 -8);
+  --secondary-foreground: lab(35% -10 -35);
+  
+  /* 强调色 - 靛蓝 */
+  --accent: lab(52% -25 -55);
+  --accent-foreground: lab(98% 0 0);
+  
+  /* 背景色 - 温暖灰白 */
+  --background: lab(99% 0 0);
+  --foreground: lab(15% 0 0);
+  
+  /* 卡片色 */
   --card: lab(100% 0 0);
-  --card-foreground: lab(2.75381% 0 0);
-  --popover: lab(100% 0 0);
-  --popover-foreground: lab(2.75381% 0 0);
-  --primary: lab(7.78201% -0.0000149012 0);
-  --primary-foreground: lab(98.26% 0 0);
-  --secondary: lab(96.52% -0.0000298023 0.0000119209);
-  --secondary-foreground: lab(7.78201% -0.0000149012 0);
-  --muted: lab(96.52% -0.0000298023 0.0000119209);
-  --muted-foreground: lab(48.496% 0 0);
-  --accent: lab(96.52% -0.0000298023 0.0000119209);
-  --accent-foreground: lab(7.78201% -0.0000149012 0);
-  --destructive: lab(48.4493% 77.4328 61.5452);
-  --destructive-foreground: lab(96.4152% 3.22586 1.14673);
-  --border: lab(90.952% 0 -0.0000119209);
-  --input: lab(90.952% 0 -0.0000119209);
-  --ring: lab(66.128% -0.0000298023 0.0000119209);
-  --sidebar: lab(98.26% 0 0);
-  --sidebar-foreground: lab(2.75381% 0 0);
-  --sidebar-primary: lab(7.78201% -0.0000149012 0);
-  --sidebar-primary-foreground: lab(98.26% 0 0);
-  --sidebar-accent: lab(96.52% -0.0000298023 0.0000119209);
-  --sidebar-accent-foreground: lab(7.78201% -0.0000149012 0);
-  --sidebar-border: lab(90.952% 0 -0.0000119209);
-  --sidebar-ring: lab(66.128% -0.0000298023 0.0000119209);
-  --surface: lab(97.68% -0.0000298023 0.0000119209);
-  --code: var(--surface);
-  --code-highlight: lab(95.36% 0 0);
-  --code-number: lab(48.96% 0 0);
-  --selection: lab(2.75381% 0 0);
-  --selection-foreground: lab(100% 0 0);
-  --tw-shadow: 0 0 #0000;
-  --tw-shadow-color: initial;
-  --tw-shadow-alpha: 100%;
-  --tw-inset-shadow: 0 0 #0000;
-  --tw-inset-shadow-color: initial;
-  --tw-inset-shadow-alpha: 100%;
-  --tw-ring-color: initial;
-  --tw-ring-shadow: 0 0 #0000;
-  --tw-inset-ring-color: initial;
-  --tw-inset-ring-shadow: 0 0 #0000;
-  --tw-ring-inset: initial;
-  --tw-ring-offset-width: 0px;
-  --tw-ring-offset-color: #fff;
-  --tw-ring-offset-shadow: 0 0 #0000;
+  --card-foreground: lab(15% 0 0);
+  
+  /* 状态色 */
+  --success: lab(65% -45 50);
+  --warning: lab(75% 20 75);
+  --danger: lab(55% 55 70);
+  
+  /* 中性色 */
+  --muted: lab(97% 0 0);
+  --muted-foreground: lab(45% 0 0);
+  --border: lab(92% 0 0);
+  --input: lab(95% 0 0);
+  --ring: lab(45% -15 -45);
 }
 
 .dark {

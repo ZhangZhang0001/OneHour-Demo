@@ -292,7 +292,7 @@ export default function AddInspection() {
             <View className="bg-gray-50 rounded-xl px-4 py-3">
               <Input
                 value={inspector}
-                onInput={(e) => setInspector(e.detail.value)}
+                onInput={(e: { detail: { value: string } }) => setInspector(e.detail.value)}
                 placeholder="请输入检查人姓名"
                 className="bg-transparent border-0 p-0 h-auto text-base"
               />
@@ -316,7 +316,7 @@ export default function AddInspection() {
             <View className="bg-gray-50 rounded-xl p-4">
               <Textarea
                 value={remark}
-                onInput={(e) => setRemark(e.detail.value)}
+                onInput={(e: { detail: { value: string } }) => setRemark(e.detail.value)}
                 placeholder="可选填写，如发现的问题描述..."
                 maxlength={200}
                 style={{ width: '100%', minHeight: '80px', backgroundColor: 'transparent' }}

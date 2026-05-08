@@ -1,11 +1,9 @@
 import { useState, useEffect } from 'react'
-import { View, Text, ScrollView } from '@tarojs/components'
-import { useRouter } from '@tarojs/taro'
-import { Wrench, Plus, CircleCheck, Clock, TriangleAlert, ArrowRight } from 'lucide-react-taro'
-import { Card, CardContent } from '@/components/ui/card'
+import { View, Text } from '@tarojs/components'
+import Taro from '@tarojs/taro'
+import { Wrench, Plus, ArrowRight } from 'lucide-react-taro'
 import { Button } from '@/components/ui/button'
 import { Network } from '@/network'
-import Taro from '@tarojs/taro'
 
 interface InspectionRecord {
   id: number
@@ -21,7 +19,6 @@ interface InspectionRecord {
 type FilterStatus = 'all' | 'normal' | 'pending' | 'broken'
 
 export default function Inspection() {
-  const router = useRouter()
   const [records, setRecords] = useState<InspectionRecord[]>([])
   const [loading, setLoading] = useState(true)
   const [filterStatus, setFilterStatus] = useState<FilterStatus>('all')
@@ -51,19 +48,19 @@ export default function Inspection() {
   const getStatusConfig = (status: string) => {
     switch (status) {
       case 'normal':
-        return { label: '正常', color: 'bg-green-100 text-green-700', icon: CircleCheck, iconColor: '#22c55e' }
+        return { label: '正常', color: 'bg-green-100 text-green-700' }
       case 'pending':
-        return { label: '待维修', color: 'bg-orange-100 text-orange-700', icon: Clock, iconColor: '#f97316' }
+        return { label: '待维修', color: 'bg-orange-100 text-orange-700' }
       case 'broken':
-        return { label: '故障', color: 'bg-red-100 text-red-700', icon: TriangleAlert, iconColor: '#ef4444' }
+        return { label: '故障', color: 'bg-red-100 text-red-700' }
       default:
-        return { label: '未知', color: 'bg-slate-100 text-slate-700', icon: TriangleAlert, iconColor: '#64748b' }
+        return { label: '未知', color: 'bg-slate-100 text-slate-700' }
     }
   }
 
   const navigateTo = (path: string) => {
     if (path.startsWith('/')) {
-      router.push(path)
+      Taro.navigateTo({ url: path })
     }
   }
 
@@ -78,8 +75,8 @@ export default function Inspection() {
       {/* 添加按钮 */}
       <View className="px-4 py-3">
         <Button className="w-full" onClick={() => navigateTo('/pages/inspection/add')}>
-          <Plus size={18} />
-          <Text className="ml-2">新增巡检记录</Text>
+          <Plus size={18} color="#ffffff" />
+          <Text className="ml-2 text-white">新增巡检记录</Text>
         </Button>
       </View>
 
@@ -116,7 +113,6 @@ export default function Inspection() {
         ) : filteredRecords.length > 0 ? (
           filteredRecords.map((record) => {
             const config = getStatusConfig(record.status)
-            const StatusIcon = config.icon
             return (
               <View 
                 key={record.id}
@@ -125,13 +121,13 @@ export default function Inspection() {
               >
                 <View className="p-4">
                   <View className="flex items-start gap-3">
-                    <View className="w-12 h-12 rounded-xl bg-orange-100 flex items-center justify-center flex-shrink-0">
-                      <Wrench size={24} color="#f97316" />
+                    <View className="w-12 h-12 rounded-xl bg-indigo-100 flex items-center justify-center flex-shrink-0">
+                      <Wrench size={24} color="#6366f1" />
                     </View>
                     <View className="flex-1">
                       <View className="flex items-center gap-2">
                         <Text className="block text-base font-medium text-slate-800">{record.equipment_name}</Text>
-                        <View className={`px-2 py-0.5 rounded text-xs ${config.color}`}>
+                        <View className={`px-2 py-1 rounded text-xs ${config.color}`}>
                           {config.label}
                         </View>
                       </View>
