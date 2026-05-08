@@ -64,29 +64,40 @@ export class InspectionService {
       return { success: true, message: '器械已存在' };
     }
 
-    // 默认器械配置
+    // 默认器械配置（与前端保持一致）
     const defaultEquipment = [
-      // A区器械（有氧区）
+      // A区器械（跑步机——龙门架）
       { name: '跑步机 1号', area: 'A' },
       { name: '跑步机 2号', area: 'A' },
       { name: '跑步机 3号', area: 'A' },
-      { name: '椭圆机 1号', area: 'A' },
-      { name: '椭圆机 2号', area: 'A' },
-      { name: '健身车 1号', area: 'A' },
-      // B区器械（力量区）
-      { name: '史密斯机 1号', area: 'B' },
-      { name: '深蹲架 1号', area: 'B' },
-      { name: '卧推架 1号', area: 'B' },
-      { name: '蝴蝶机 1号', area: 'B' },
-      { name: '划船机 1号', area: 'B' },
-      { name: '龙门架 1号', area: 'B' },
-      // C区器械（自由重量区）
-      { name: '哑铃架 1号', area: 'C' },
-      { name: '哑铃架 2号', area: 'C' },
-      { name: '壶铃架 1号', area: 'C' },
-      { name: '杠铃架 1号', area: 'C' },
-      { name: '腹肌板 1号', area: 'C' },
-      { name: '多功能训练架 1号', area: 'C' },
+      { name: '跑步机 4号', area: 'A' },
+      { name: '单车 1-4号', area: 'A' },
+      { name: '辅助引体机', area: 'A' },
+      { name: '划船机', area: 'A' },
+      { name: '推肩器', area: 'A' },
+      { name: '蝴蝶机', area: 'A' },
+      { name: '龙门架+组件', area: 'A' },
+      // B区器械（龙门架——私教区）
+      { name: '海豹划船', area: 'B' },
+      { name: '大剪刀', area: 'B' },
+      { name: '反手高位下拉', area: 'B' },
+      { name: '哈克深蹲机', area: 'B' },
+      { name: '倒蹬机', area: 'B' },
+      { name: '臀桥机', area: 'B' },
+      { name: '罗马椅', area: 'B' },
+      { name: '分动式划船器', area: 'B' },
+      { name: '史密斯深蹲架', area: 'B' },
+      { name: 'T杆划船', area: 'B' },
+      { name: '犀牛蹲', area: 'B' },
+      // C区器械（龙门架——私教区）
+      { name: '哑铃架', area: 'C' },
+      { name: '平板推胸', area: 'C' },
+      { name: '斜板推胸', area: 'C' },
+      { name: '髋外展机', area: 'C' },
+      { name: '坐姿腿弯举', area: 'C' },
+      { name: '坐姿腿屈伸', area: 'C' },
+      { name: '推胸机', area: 'C' },
+      { name: '高位下拉', area: 'C' },
     ];
 
     const result = await this.supabase
