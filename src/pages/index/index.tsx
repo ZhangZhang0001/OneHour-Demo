@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import Taro from '@tarojs/taro'
 import { View, Text, ScrollView } from '@tarojs/components'
-import { BookOpen, Wrench, MessageSquare, Zap } from 'lucide-react-taro'
+import { BookOpen, Wrench, MessageSquare } from 'lucide-react-taro'
 import { Network } from '@/network'
 import FeedbackSheet from '@/components/feedback-sheet'
 
@@ -57,63 +57,39 @@ export default function Index() {
   return (
     <View className="min-h-screen bg-slate-50">
       <ScrollView scrollY className="h-screen pb-safe">
-        {/* 励志标语区域 - 清新蓝色系 */}
-        <View className="bg-gradient-to-br from-slate-700 via-slate-600 to-slate-800 px-5 py-8">
-          {/* 装饰线条 */}
-          <View className="flex flex-row gap-1 mb-4">
-            <View className="w-8 h-1 bg-cyan-400 rounded-full" />
-            <View className="w-4 h-1 bg-cyan-300 rounded-full opacity-60" />
-            <View className="w-2 h-1 bg-cyan-200 rounded-full opacity-40" />
-          </View>
-          
-          {/* 标语主文 */}
-          <View className="mb-3">
-            <Text className="block text-white text-xl font-medium leading-relaxed">
+        {/* 励志标语区域 - 干净居中 */}
+        <View className="bg-white px-5 py-10">
+          <View className="text-center">
+            <Text className="block text-2xl font-bold text-slate-800 mb-2 tracking-wide">
               不用和别人比
             </Text>
-          </View>
-          <View className="flex flex-row items-center gap-2">
-            <Text className="block text-cyan-300 text-lg font-normal">
+            <Text className="block text-lg text-slate-500 font-light">
               每天只赢自己一小时
             </Text>
-            <Zap size={18} color="#22d3ee" />
-          </View>
-          
-          {/* 励志标签 */}
-          <View className="flex flex-row items-center gap-2 mt-5">
-            <View className="bg-white bg-opacity-10 rounded-full px-3 py-1">
-              <Text className="block text-cyan-200 text-xs">坚持</Text>
-            </View>
-            <View className="bg-white bg-opacity-10 rounded-full px-3 py-1">
-              <Text className="block text-cyan-200 text-xs">突破</Text>
-            </View>
-            <View className="bg-white bg-opacity-10 rounded-full px-3 py-1">
-              <Text className="block text-cyan-200 text-xs">成长</Text>
-            </View>
           </View>
         </View>
 
         {/* 今日概况 */}
-        <View className="px-4 -mt-3">
+        <View className="px-4 mt-2">
           <View className="bg-white rounded-2xl shadow-sm p-4 mb-4 border border-slate-100">
             <View className="flex items-center gap-2 mb-4">
               <View className="w-1 h-5 bg-gradient-to-b from-cyan-500 to-blue-500 rounded-full" />
               <Text className="block text-base font-semibold text-slate-800">今日概况</Text>
             </View>
             <View className="grid grid-cols-2 gap-3">
-              <View className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-3 border border-blue-100">
+              <View className="bg-blue-50 rounded-xl p-3">
                 <Text className="block text-2xl font-bold text-blue-600">{stats.totalEquipment}</Text>
                 <Text className="block text-xs text-blue-500 mt-1">器械总数</Text>
               </View>
-              <View className="bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-3 border border-green-100">
+              <View className="bg-green-50 rounded-xl p-3">
                 <Text className="block text-2xl font-bold text-green-600">{stats.todayInspected}</Text>
                 <Text className="block text-xs text-green-500 mt-1">今日已巡检</Text>
               </View>
-              <View className="bg-gradient-to-br from-amber-50 to-amber-100 rounded-xl p-3 border border-amber-100">
+              <View className="bg-amber-50 rounded-xl p-3">
                 <Text className="block text-2xl font-bold text-amber-600">{stats.todayPending}</Text>
                 <Text className="block text-xs text-amber-500 mt-1">待维修</Text>
               </View>
-              <View className="bg-gradient-to-br from-red-50 to-red-100 rounded-xl p-3 border border-red-100">
+              <View className="bg-red-50 rounded-xl p-3">
                 <Text className="block text-2xl font-bold text-red-600">{stats.todayFault}</Text>
                 <Text className="block text-xs text-red-500 mt-1">故障</Text>
               </View>
