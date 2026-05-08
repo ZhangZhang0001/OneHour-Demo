@@ -109,7 +109,7 @@ export default function AddInspection() {
     setSubmitting(true)
     try {
       const res = await Network.request({
-        url: '/api/inspection/create',
+        url: '/api/inspection/add',
         method: 'POST',
         data: {
           inspector,
