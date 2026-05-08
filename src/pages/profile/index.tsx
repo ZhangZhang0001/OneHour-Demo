@@ -6,34 +6,19 @@ import { Avatar } from '@/components/ui/avatar'
 import { Separator } from '@/components/ui/separator'
 import { User, Building2, Phone, Info, MessageSquare, ClipboardList, ArrowRight } from 'lucide-react-taro'
 import { Network } from '@/network'
-import './index.css'
-
-interface StatsCount {
-  todayUninspected: number
-  pendingRepairs: number
-  totalInspections: number
-}
 
 export default function Profile() {
   const [feedbackCount, setFeedbackCount] = useState(0)
-  const [statsCount, setStatsCount] = useState<StatsCount>({ todayUninspected: 0, pendingRepairs: 0, totalInspections: 0 })
 
   useEffect(() => {
-    fetchCounts()
+    fetchFeedbackCount()
   }, [])
 
-  const fetchCounts = async () => {
+  const fetchFeedbackCount = async () => {
     try {
-      const [feedbackRes, statsRes] = await Promise.all([
-        Network.request({ url: '/api/feedback/count' }),
-        Network.request({ url: '/api/inspection/stats' })
-      ])
-      
+      const feedbackRes = await Network.request({ url: '/api/feedback/count' })
       if (feedbackRes.data?.code === 200) {
         setFeedbackCount(feedbackRes.data.data?.count || 0)
-      }
-      if (statsRes.data?.code === 200) {
-        setStatsCount(statsRes.data.data || { todayUninspected: 0, pendingRepairs: 0, totalInspections: 0 })
       }
     } catch (err) {
       console.error('获取统计数据失败', err)
@@ -69,7 +54,7 @@ export default function Profile() {
           </CardContent>
         </Card>
 
-        {/* 数据统计入口 */}
+        {/* 数据管理入口 */}
         <Card className="mb-4">
           <CardContent className="p-4">
             <Text className="block text-base font-medium text-slate-800 mb-4">数据管理</Text>
@@ -110,28 +95,6 @@ export default function Profile() {
                   <Text className="block text-xs text-slate-500">查看历史巡检数据和统计报表</Text>
                 </View>
                 <ArrowRight size={18} color="#94a3b8" />
-              </View>
-            </View>
-          </CardContent>
-        </Card>
-
-        {/* 快捷统计 */}
-        <Card className="mb-4">
-          <CardContent className="p-4">
-            <Text className="block text-base font-medium text-slate-800 mb-4">今日概况</Text>
-            
-            <View className="grid grid-cols-3 gap-3">
-              <View className="bg-orange-50 rounded-xl p-3 text-center">
-                <Text className="block text-xl font-bold text-orange-600">{statsCount.todayUninspected}</Text>
-                <Text className="block text-xs text-orange-500 mt-1">待巡检</Text>
-              </View>
-              <View className="bg-red-50 rounded-xl p-3 text-center">
-                <Text className="block text-xl font-bold text-red-600">{statsCount.pendingRepairs}</Text>
-                <Text className="block text-xs text-red-500 mt-1">待维修</Text>
-              </View>
-              <View className="bg-green-50 rounded-xl p-3 text-center">
-                <Text className="block text-xl font-bold text-green-600">{statsCount.totalInspections}</Text>
-                <Text className="block text-xs text-green-500 mt-1">已完成</Text>
               </View>
             </View>
           </CardContent>

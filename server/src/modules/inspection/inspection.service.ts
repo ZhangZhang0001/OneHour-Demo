@@ -222,16 +222,22 @@ export class InspectionService {
   async getStats() {
     const today = this.getToday();
     
-    const totalResult = await this.supabase
+    const todayResult = await this.supabase
       .from('equipment_inspections')
-      .select('id')
+      .select('id, status')
       .eq('inspection_date', today);
 
     const pendingResult = await this.supabase
       .from('equipment_inspections')
       .select('id')
       .eq('inspection_date', today)
-      .in('status', ['pending', 'fault']);
+      .eq('status', 'pending');
+
+    const faultResult = await this.supabase
+      .from('equipment_inspections')
+      .select('id')
+      .eq('inspection_date', today)
+      .eq('status', 'fault');
 
     // 获取总器械数
     const equipmentResult = await this.supabase
@@ -239,13 +245,15 @@ export class InspectionService {
       .select('id');
 
     const totalEquipment = equipmentResult.data?.length || 0;
-    const todayInspected = totalResult.data?.length || 0;
+    const todayInspected = todayResult.data?.length || 0;
     const todayPending = pendingResult.data?.length || 0;
+    const todayFault = faultResult.data?.length || 0;
 
     return {
       totalEquipment,
       todayInspected,
       todayPending,
+      todayFault,
       todayUninspected: totalEquipment - todayInspected,
     };
   }
