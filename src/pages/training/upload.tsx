@@ -4,7 +4,7 @@ import Taro from '@tarojs/taro'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
-import { Upload, X, FileText } from 'lucide-react-taro'
+import { Upload, X, FileText, Plus } from 'lucide-react-taro'
 import { Network } from '@/network'
 
 export default function TrainingUpload() {
@@ -24,38 +24,49 @@ export default function TrainingUpload() {
   }
 
   const handleSelectFile = () => {
+    console.log('点击选择文件, isMiniApp:', isMiniApp, 'envType:', envType)
+
     if (!isMiniApp) {
-      Taro.showToast({ title: 'H5端暂不支持文件选择，请在小程序中操作', icon: 'none' })
+      Taro.showToast({ title: '请在微信/抖音小程序中使用', icon: 'none', duration: 3000 })
       return
     }
 
-    // 小程序端使用 chooseMessageFile
-    Taro.chooseMessageFile({
-      count: 1,
-      type: 'file',
-      extension: ['pdf', 'doc', 'docx', 'ppt', 'pptx', 'xls', 'xlsx', 'txt', 'jpg', 'jpeg', 'png', 'mp4']
-    }).then(res => {
-      if (res.tempFiles && res.tempFiles.length > 0) {
-        const file = res.tempFiles[0]
-        setSelectedFile({
-          name: file.name,
-          path: file.path,
-          size: file.size
-        })
-      }
-    }).catch(err => {
-      console.error('选择文件失败:', err)
+    try {
+      // 小程序端使用 chooseMessageFile
+      Taro.chooseMessageFile({
+        count: 1,
+        type: 'file',
+        extension: ['pdf', 'doc', 'docx', 'ppt', 'pptx', 'xls', 'xlsx', 'txt', 'jpg', 'jpeg', 'png', 'mp4']
+      }).then(res => {
+        console.log('选择文件结果:', res)
+        if (res.tempFiles && res.tempFiles.length > 0) {
+          const file = res.tempFiles[0]
+          setSelectedFile({
+            name: file.name,
+            path: file.path,
+            size: file.size
+          })
+          Taro.showToast({ title: '已选择: ' + file.name, icon: 'none', duration: 2000 })
+        }
+      }).catch(err => {
+        console.error('选择文件失败:', err)
+        Taro.showToast({ title: '选择文件失败: ' + (err.errMsg || '未知错误'), icon: 'none' })
+      })
+    } catch (err: any) {
+      console.error('选择文件异常:', err)
       Taro.showToast({ title: '选择文件失败', icon: 'none' })
-    })
+    }
   }
 
   const handleUpload = async () => {
+    console.log('点击上传, title:', title, 'selectedFile:', selectedFile)
+
     if (!title.trim()) {
       Taro.showToast({ title: '请输入资料标题', icon: 'none' })
       return
     }
     if (!selectedFile) {
-      Taro.showToast({ title: '请选择要上传的文件', icon: 'none' })
+      Taro.showToast({ title: '请先选择要上传的文件', icon: 'none' })
       return
     }
 
@@ -63,6 +74,8 @@ export default function TrainingUpload() {
     Taro.showLoading({ title: '上传中...' })
 
     try {
+      console.log('开始上传文件:', selectedFile.path)
+      
       // 使用 Network.uploadFile 上传文件（跨端兼容）
       const result = await Network.uploadFile({
         url: '/api/training/upload',
@@ -88,7 +101,7 @@ export default function TrainingUpload() {
       }
     } catch (err: any) {
       console.error('上传失败:', err)
-      Taro.showToast({ title: '上传失败，请重试', icon: 'none' })
+      Taro.showToast({ title: '上传失败: ' + (err.message || '请重试'), icon: 'none' })
     } finally {
       setUploading(false)
       Taro.hideLoading()
@@ -110,15 +123,18 @@ export default function TrainingUpload() {
           <View className="bg-white rounded-xl p-4 border border-gray-200">
             <View className="flex items-center justify-between">
               <View className="flex items-center flex-1">
-                <FileText size={24} color="#3b82f6" className="mr-3" />
-                <View className="flex-1">
+                <FileText size={24} color="#3b82f6" />
+                <View className="flex-1 ml-3">
                   <Text className="block text-sm font-medium text-gray-800 truncate">{selectedFile.name}</Text>
                   <Text className="block text-xs text-gray-500 mt-1">{formatFileSize(selectedFile.size)}</Text>
                 </View>
               </View>
               <View 
                 className="ml-3 p-2"
-                onClick={() => setSelectedFile(null)}
+                onClick={() => {
+                  setSelectedFile(null)
+                  Taro.showToast({ title: '已取消选择', icon: 'none' })
+                }}
               >
                 <X size={20} color="#9ca3af" />
               </View>
@@ -132,6 +148,9 @@ export default function TrainingUpload() {
             <Upload size={32} color="#9ca3af" />
             <Text className="block text-sm text-gray-500 mt-2">点击选择文件</Text>
             <Text className="block text-xs text-gray-400 mt-1">PDF/Word/Excel/图片/视频</Text>
+            {!isMiniApp && (
+              <Text className="block text-xs text-amber-500 mt-2">（小程序专享）</Text>
+            )}
           </View>
         )}
       </View>
@@ -173,19 +192,21 @@ export default function TrainingUpload() {
           onClick={handleUpload}
           disabled={uploading}
         >
-          {uploading ? '上传中...' : '确认上传'}
+          <Plus size={18} color="#ffffff" />
+          <Text className="ml-2 text-white">{uploading ? '上传中...' : '确认上传'}</Text>
         </Button>
       </View>
 
-      {/* H5 端提示 */}
-      {!isMiniApp && (
-        <View className="mt-6 bg-amber-50 rounded-xl p-4">
-          <Text className="block text-sm text-amber-700">
-            文件上传功能仅在小程序中可用{'\n'}
-            请在微信/抖音小程序中打开体验完整功能
-          </Text>
-        </View>
-      )}
+      {/* 提示信息 */}
+      <View className="mt-6 bg-blue-50 rounded-xl p-4">
+        <Text className="block text-sm text-blue-700">
+          上传说明：{'\n'}
+          1. 支持 PDF、Word、Excel、图片、视频等格式{'\n'}
+          2. 文件大小建议不超过 50MB{'\n'}
+          3. 请确保填写资料标题{'\n'}
+          {!isMiniApp && '4. 此功能仅在小程序中可用'}
+        </Text>
+      </View>
     </View>
   )
 }
