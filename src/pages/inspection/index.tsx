@@ -22,7 +22,6 @@ export default function Inspection() {
   const [loading, setLoading] = useState(true)
   const [filterStatus, setFilterStatus] = useState<FilterStatus>('all')
 
-  // 获取巡检记录
   const fetchRecords = useCallback(async () => {
     try {
       setLoading(true)
@@ -40,8 +39,12 @@ export default function Inspection() {
 
   useEffect(() => {
     fetchRecords()
+    const handleReload = () => fetchRecords()
+    Taro.eventCenter.on('reloadHome', handleReload)
+    return () => {
+      Taro.eventCenter.off('reloadHome', handleReload)
+    }
   }, [fetchRecords])
-
 
   const filteredRecords = filterStatus === 'all' 
     ? records 
@@ -68,13 +71,11 @@ export default function Inspection() {
 
   return (
     <View className="min-h-screen bg-slate-50 pb-safe">
-      {/* 顶部标题 */}
       <View className="bg-white px-4 py-4 border-b border-slate-100">
         <Text className="block text-xl font-bold text-slate-800">器械巡检</Text>
         <Text className="block text-sm text-slate-500 mt-1">每日器械巡检与维护记录</Text>
       </View>
 
-      {/* 添加按钮 */}
       <View className="px-4 pb-3 pt-3">
         <View 
           className="bg-blue-500 rounded-lg py-3 px-4 flex items-center justify-center"
@@ -85,7 +86,6 @@ export default function Inspection() {
         </View>
       </View>
 
-      {/* 筛选标签 */}
       <View className="px-4 pb-3">
         <View className="flex gap-2">
           {[
@@ -111,7 +111,6 @@ export default function Inspection() {
         </View>
       </View>
 
-      {/* 统计卡片 */}
       <View className="px-4 pb-3">
         <View className="bg-white rounded-lg p-4">
           <View className="flex justify-around">
@@ -141,45 +140,39 @@ export default function Inspection() {
         </View>
       </View>
 
-      {/* 记录列表 */}
       <View className="px-4 pb-8">
         {loading ? (
           <View className="py-8 text-center">
             <Text className="block text-slate-400">加载中...</Text>
           </View>
         ) : filteredRecords.length === 0 ? (
-          <View className="py-8 text-center bg-white rounded-lg">
-            <Wrench size={48} color="#cbd5e1" />
-            <Text className="block text-slate-400 mt-4">暂无巡检记录</Text>
+          <View className="py-8 text-center">
+            <Text className="block text-slate-400">暂无巡检记录</Text>
           </View>
         ) : (
           filteredRecords.map(record => {
             const statusConfig = getStatusConfig(record.status)
             return (
               <View key={record.id} className="bg-white rounded-lg p-4 mb-3">
-                <View className="flex justify-between items-start mb-2">
+                <View className="flex justify-between items-start">
                   <View>
                     <Text className="block text-base font-medium text-slate-800">
                       {record.equipment_name}
                     </Text>
-                    <Text className="block text-sm text-slate-400 mt-1">
-                      {record.area}区 · {record.inspector || '未知'}
+                    <Text className="block text-sm text-slate-500 mt-1">
+                      {record.area}区 | {record.inspector}
                     </Text>
                   </View>
-                  <View className={`px-3 py-1 rounded-full ${statusConfig.color}`}>
-                    <Text className="text-sm">{statusConfig.label}</Text>
+                  <View className={`px-3 py-1 rounded-full text-xs ${statusConfig.color}`}>
+                    <Text className="text-xs">{statusConfig.label}</Text>
                   </View>
                 </View>
                 {record.remark && (
-                  <View className="mt-2 pt-2 border-t border-slate-100">
-                    <Text className="block text-sm text-slate-500">{record.remark}</Text>
-                  </View>
+                  <Text className="block text-sm text-slate-400 mt-2">备注：{record.remark}</Text>
                 )}
-                <View className="mt-2 flex items-center">
-                  <Text className="block text-xs text-slate-400">
-                    {record.created_at ? new Date(record.created_at).toLocaleString('zh-CN') : ''}
-                  </Text>
-                </View>
+                <Text className="block text-xs text-slate-400 mt-2">
+                  {new Date(record.created_at).toLocaleString('zh-CN')}
+                </Text>
               </View>
             )
           })
@@ -188,9 +181,3 @@ export default function Inspection() {
     </View>
   )
 }
-
-const config = typeof definePageConfig === 'function'
-  ? definePageConfig({ navigationBarTitleText: '器械巡检' })
-  : { navigationBarTitleText: '器械巡检' }
-
-export { config }
