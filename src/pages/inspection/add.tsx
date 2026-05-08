@@ -2,21 +2,17 @@ import { useState, useEffect } from 'react'
 import Taro from '@tarojs/taro'
 import { View, Text, ScrollView } from '@tarojs/components'
 import { ArrowLeft } from 'lucide-react-taro'
-import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Checkbox } from '@/components/ui/checkbox'
-import { Card, CardContent } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
 import { Network } from '@/network'
 
-// 区域配置（与后端保持一致）
+// 区域配置
 const AREAS = [
   { id: 'A', name: 'A区', description: '跑步机——龙门架' },
   { id: 'B', name: 'B区', description: '龙门架——私教区' },
   { id: 'C', name: 'C区', description: '龙门架——私教区' },
 ]
 
-// 器械列表（与后端保持一致）
+// 器械列表
 const DEFAULT_EQUIPMENT: Record<string, Array<{ id: number; name: string }>> = {
   A: [
     { id: 1, name: '跑步机 1号' },
@@ -73,10 +69,9 @@ export default function AddInspection() {
     }
   }, [])
 
-  // 获取当前区域的器械
   const currentEquipments = DEFAULT_EQUIPMENT[selectedArea] || []
 
-  // 切换区域时清空选择
+  // 切换区域
   const handleAreaChange = (areaId: string) => {
     setSelectedArea(areaId)
     setSelectedEquipments([])
@@ -94,11 +89,10 @@ export default function AddInspection() {
     })
   }
 
-  // 全选当前区域器械
+  // 全选
   const selectAll = () => {
     const allIds = currentEquipments.map(e => e.id)
     setSelectedEquipments(allIds)
-    // 默认全部设为正常
     const defaultStatus: Record<number, string> = {}
     allIds.forEach(id => {
       defaultStatus[id] = 'normal'
@@ -113,17 +107,17 @@ export default function AddInspection() {
     setEquipmentRemarks({})
   }
 
-  // 更新器械状态
+  // 设置器械状态
   const updateStatus = (id: number, status: string) => {
     setEquipmentStatus(prev => ({ ...prev, [id]: status }))
   }
 
-  // 更新器械备注
+  // 设置备注
   const updateRemark = (id: number, remark: string) => {
     setEquipmentRemarks(prev => ({ ...prev, [id]: remark }))
   }
 
-  // 提交巡检记录（批量）
+  // 提交
   const handleSubmit = async () => {
     if (!inspector.trim()) {
       Taro.showToast({ title: '请输入检查人姓名', icon: 'none' })
@@ -135,10 +129,9 @@ export default function AddInspection() {
       return
     }
 
-    // 检查是否所有选中的器械都已设置状态
     const uncheckedEquipments = selectedEquipments.filter(id => !equipmentStatus[id])
     if (uncheckedEquipments.length > 0) {
-      Taro.showToast({ title: '请为所有选中的器械设置状态', icon: 'none' })
+      Taro.showToast({ title: '请为所有器械设置状态', icon: 'none' })
       return
     }
 
@@ -146,8 +139,6 @@ export default function AddInspection() {
 
     try {
       const today = new Date().toISOString().split('T')[0]
-
-      // 批量提交
       const promises = selectedEquipments.map(equipmentId => {
         const equipment = currentEquipments.find(e => e.id === equipmentId)
         return Network.request({
@@ -166,19 +157,10 @@ export default function AddInspection() {
       })
 
       await Promise.all(promises)
-
-      // 保存检查人姓名到本地存储
       Taro.setStorageSync(STORAGE_KEY, inspector.trim())
-
       Taro.showToast({ title: '提交成功', icon: 'success' })
 
-      // 返回上一页并触发刷新
       setTimeout(() => {
-        const pages = Taro.getCurrentPages()
-        const prevPage = pages[pages.length - 2]
-        if (prevPage) {
-          prevPage.onShow?.()
-        }
         Taro.navigateBack()
       }, 1500)
     } catch (error) {
@@ -189,72 +171,69 @@ export default function AddInspection() {
     }
   }
 
+  const getStatusColor = (status: string, isActive: boolean) => {
+    if (!isActive) return 'bg-gray-100 text-gray-600'
+    if (status === 'normal') return 'bg-green-500 text-white'
+    if (status === 'pending') return 'bg-amber-500 text-white'
+    if (status === 'fault') return 'bg-red-500 text-white'
+    return 'bg-gray-100 text-gray-600'
+  }
+
   return (
-    <View className="min-h-screen bg-gray-50 pb-24">
+    <View className="min-h-screen bg-gray-50">
       {/* 顶部导航 */}
-      <View className="bg-slate-700 text-white px-4 py-4">
-        <View className="flex items-center gap-3">
-          <ArrowLeft size={20} color="white" onClick={() => Taro.navigateBack()} />
-          <Text className="block text-lg font-medium">新增巡检记录</Text>
-        </View>
+      <View className="bg-slate-700 text-white px-4 py-4 flex items-center gap-3">
+        <ArrowLeft size={20} color="white" onClick={() => Taro.navigateBack()} />
+        <Text className="block text-lg font-medium">新增巡检记录</Text>
       </View>
 
-      <ScrollView scrollY className="p-4" style={{ height: 'calc(100vh - 180px)' }}>
-        {/* 检查人 */}
-        <View className="mb-4">
-          <Text className="block text-sm font-medium text-gray-700 mb-2">检查人</Text>
-          <View className="bg-white rounded-xl px-4 py-3">
-            <Input
-              className="w-full"
-              placeholder="请输入检查人姓名"
-              value={inspector}
-              onInput={(e) => setInspector(e.detail.value)}
-            />
+      <ScrollView scrollY style={{ height: 'calc(100vh - 140px)' }}>
+        <View className="p-4">
+          {/* 检查人 */}
+          <View className="mb-4">
+            <Text className="block text-sm font-medium text-gray-700 mb-2">检查人</Text>
+            <View className="bg-white rounded-xl px-4 py-3">
+              <Input
+                className="w-full"
+                placeholder="请输入检查人姓名"
+                value={inspector}
+                onInput={(e) => setInspector(e.detail.value)}
+              />
+            </View>
+            {inspector && (
+              <Text className="block text-xs text-blue-500 mt-1">姓名会自动保存，下次自动填充</Text>
+            )}
           </View>
-          {inspector && (
-            <Text className="block text-xs text-blue-500 mt-1">姓名会自动保存，下次自动填充</Text>
-          )}
-        </View>
 
-        {/* 区域选择 */}
-        <View className="mb-4">
-          <Text className="block text-sm font-medium text-gray-700 mb-2">选择区域</Text>
-          <View className="flex gap-2">
-            {AREAS.map(area => (
-              <Badge
-                key={area.id}
-                variant={selectedArea === area.id ? 'default' : 'outline'}
-                className={`px-4 py-2 cursor-pointer ${
-                  selectedArea === area.id ? 'bg-slate-700 text-white' : ''
-                }`}
-                onClick={() => handleAreaChange(area.id)}
-              >
-                <Text className="block">{area.name}</Text>
-              </Badge>
-            ))}
+          {/* 区域选择 */}
+          <View className="mb-4">
+            <Text className="block text-sm font-medium text-gray-700 mb-2">选择区域</Text>
+            <View className="flex gap-2">
+              {AREAS.map(area => (
+                <View
+                  key={area.id}
+                  className={`px-4 py-2 rounded-lg cursor-pointer ${
+                    selectedArea === area.id
+                      ? 'bg-slate-700 text-white'
+                      : 'bg-white text-gray-700 border border-gray-300'
+                  }`}
+                  onClick={() => handleAreaChange(area.id)}
+                >
+                  <Text className="block text-sm">{area.name}</Text>
+                </View>
+              ))}
+            </View>
+            <Text className="block text-xs text-gray-500 mt-1">
+              {AREAS.find(a => a.id === selectedArea)?.description}
+            </Text>
           </View>
-          <Text className="block text-xs text-gray-500 mt-1">
-            {AREAS.find(a => a.id === selectedArea)?.description}
-          </Text>
-        </View>
 
-        {/* 器械列表 */}
-        <View className="mb-4">
+          {/* 全选/取消 */}
           <View className="flex items-center justify-between mb-2">
             <Text className="text-sm font-medium text-gray-700">选择器械</Text>
-            <View className="flex gap-2">
-              <Text
-                className="block text-xs text-blue-500"
-                onClick={selectAll}
-              >
-                全选
-              </Text>
-              <Text
-                className="block text-xs text-gray-500"
-                onClick={deselectAll}
-              >
-                取消
-              </Text>
+            <View className="flex gap-4">
+              <Text className="text-xs text-blue-500" onClick={selectAll}>全选</Text>
+              <Text className="text-xs text-gray-500" onClick={deselectAll}>取消</Text>
             </View>
           </View>
 
@@ -264,92 +243,86 @@ export default function AddInspection() {
             </Text>
           )}
 
-          <Card>
-            <CardContent className="p-3">
-              {currentEquipments.map(equipment => (
-                <View
-                  key={equipment.id}
-                  className={`p-3 mb-2 rounded-lg border ${
-                    selectedEquipments.includes(equipment.id)
-                      ? 'border-slate-500 bg-slate-50'
-                      : 'border-gray-200 bg-white'
+          {/* 器械列表 */}
+          {currentEquipments.map(equipment => {
+            const isSelected = selectedEquipments.includes(equipment.id)
+            return (
+              <View
+                key={equipment.id}
+                className={`mb-2 p-3 rounded-lg ${
+                  isSelected ? 'bg-slate-50 border border-slate-300' : 'bg-white border border-gray-200'
+                }`}
+                onClick={() => toggleEquipment(equipment.id)}
+              >
+                <View className="flex items-center gap-2">
+                  <View className={`w-5 h-5 rounded border-2 flex items-center justify-center ${
+                    isSelected ? 'bg-slate-700 border-slate-700' : 'border-gray-300'
                   }`}
-                  onClick={() => toggleEquipment(equipment.id)}
-                >
-                  <View className="flex items-start gap-3">
-                    <Checkbox
-                      checked={selectedEquipments.includes(equipment.id)}
-                      onCheckedChange={() => toggleEquipment(equipment.id)}
-                    />
-                    <View className="flex-1">
-                      <Text className="block text-sm font-medium text-gray-800">
-                        {equipment.name}
-                      </Text>
+                  >
+                    {isSelected && <Text className="block text-white text-xs">✓</Text>}
+                  </View>
+                  <Text className="flex-1 text-sm text-gray-800">{equipment.name}</Text>
+                </View>
 
-                      {selectedEquipments.includes(equipment.id) && (
-                        <View className="mt-2">
-                          {/* 状态选择 */}
-                          <View className="flex gap-2 mb-2">
-                            {[
-                              { value: 'normal', label: '正常', color: 'bg-green-500' },
-                              { value: 'pending', label: '待维修', color: 'bg-amber-500' },
-                              { value: 'fault', label: '故障', color: 'bg-red-500' },
-                            ].map(opt => (
-                              <View
-                                key={opt.value}
-                                className={`px-3 py-1 rounded-full text-xs cursor-pointer ${
-                                  equipmentStatus[equipment.id] === opt.value
-                                    ? `${opt.color} text-white`
-                                    : 'bg-gray-100 text-gray-600'
-                                }`}
-                                onClick={(e) => {
-                                  e.stopPropagation()
-                                  updateStatus(equipment.id, opt.value)
-                                }}
-                              >
-                                <Text className="block">{opt.label}</Text>
-                              </View>
-                            ))}
-                          </View>
-
-                          {/* 备注 */}
-                          <View className="bg-white rounded-lg px-3 py-2">
-                            <Input
-                              className="w-full text-xs"
-                              placeholder="备注（选填）"
-                              value={equipmentRemarks[equipment.id] || ''}
-                              onClick={(e) => e.stopPropagation()}
-                              onInput={(e) => {
-                                e.stopPropagation()
-                                updateRemark(equipment.id, e.detail.value)
-                              }}
-                            />
-                          </View>
+                {isSelected && (
+                  <View className="mt-2 ml-7">
+                    {/* 状态选择 */}
+                    <View className="flex gap-2">
+                      {[
+                        { value: 'normal', label: '正常' },
+                        { value: 'pending', label: '待维修' },
+                        { value: 'fault', label: '故障' },
+                      ].map(opt => (
+                        <View
+                          key={opt.value}
+                          className={`px-3 py-1 rounded-full text-xs ${getStatusColor(opt.value, equipmentStatus[equipment.id] === opt.value)}`}
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            updateStatus(equipment.id, opt.value)
+                          }}
+                        >
+                          <Text className="block">{opt.label}</Text>
                         </View>
-                      )}
+                      ))}
+                    </View>
+                    {/* 备注 */}
+                    <View className="mt-2 bg-white rounded-lg px-3 py-2">
+                      <Input
+                        className="w-full text-xs"
+                        placeholder="备注（选填）"
+                        value={equipmentRemarks[equipment.id] || ''}
+                        onClick={(e) => e.stopPropagation()}
+                        onInput={(e) => {
+                          e.stopPropagation()
+                          updateRemark(equipment.id, e.detail.value)
+                        }}
+                      />
                     </View>
                   </View>
-                </View>
-              ))}
-            </CardContent>
-          </Card>
+                )}
+              </View>
+            )
+          })}
         </View>
       </ScrollView>
 
-      {/* 底部提交按钮 */}
+      {/* 底部提交 */}
       <View
         className="fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-gray-200"
         style={{ paddingBottom: `${Taro.getSystemInfoSync().safeArea?.bottom || 16}px` }}
       >
-        <Button
-          className="w-full bg-slate-700 hover:bg-slate-800"
+        <View
+          className={`w-full py-3 rounded-xl text-center ${
+            submitting || selectedEquipments.length === 0
+              ? 'bg-gray-300 text-gray-500'
+              : 'bg-slate-700 text-white'
+          }`}
           onClick={handleSubmit}
-          disabled={submitting || selectedEquipments.length === 0}
         >
-          <Text className="block text-white">
+          <Text className="block">
             {submitting ? '提交中...' : `提交巡检 (${selectedEquipments.length}个)`}
           </Text>
-        </Button>
+        </View>
       </View>
     </View>
   )
