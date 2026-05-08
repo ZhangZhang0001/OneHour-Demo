@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import Taro from '@tarojs/taro'
 import { View, Text } from '@tarojs/components'
-import { Dumbbell, Phone, MessageSquare, LogOut } from 'lucide-react-taro'
+import { Dumbbell, Phone, MessageSquare, History, BookOpen, ChartBar, LogOut, ChevronRight } from 'lucide-react-taro'
 
 interface GymInfo {
   name: string
@@ -21,6 +21,17 @@ export default function Profile() {
       setUserInfo(userData)
     }
   }, [])
+
+  const handleNavigate = (url: string) => {
+    Taro.navigateTo({ url })
+  }
+
+  const dataManagementItems = [
+    { icon: MessageSquare, label: '反馈管理', color: 'bg-purple-50', iconColor: '#9333ea', url: '/pages/feedback/index' },
+    { icon: History, label: '巡检历史', color: 'bg-blue-50', iconColor: '#3b82f6', url: '/pages/history/index' },
+    { icon: BookOpen, label: '培训资料', color: 'bg-amber-50', iconColor: '#d97706', url: '/pages/training/index' },
+    { icon: ChartBar, label: '数据统计', color: 'bg-green-50', iconColor: '#16a34a', url: '/pages/statistics/index' },
+  ]
 
   return (
     <View className="min-h-screen bg-slate-50 pb-safe">
@@ -68,19 +79,32 @@ export default function Profile() {
         </View>
       </View>
 
-      {/* 功能菜单 */}
+      {/* 数据管理 */}
+      <View className="px-4 mt-4">
+        <Text className="block text-sm font-medium text-slate-500 mb-3 px-1">数据管理</Text>
+        <View className="bg-white rounded-2xl overflow-hidden">
+          {dataManagementItems.map((item, index) => (
+            <View 
+              key={item.label}
+              className={`flex items-center justify-between px-5 py-4 ${index < dataManagementItems.length - 1 ? 'border-b border-slate-100' : ''}`}
+              onClick={() => handleNavigate(item.url)}
+            >
+              <View className="flex items-center gap-3">
+                <View className={`w-9 h-9 rounded-lg flex items-center justify-center ${item.color}`}>
+                  <item.icon size={18} color={item.iconColor} />
+                </View>
+                <Text className="block text-sm text-slate-700">{item.label}</Text>
+              </View>
+              <ChevronRight size={18} color="#cbd5e1" />
+            </View>
+          ))}
+        </View>
+      </View>
+
+      {/* 其他功能 */}
       <View className="px-4 mt-4">
         <View className="bg-white rounded-2xl overflow-hidden">
           <View className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
-            <View className="flex items-center gap-3">
-              <View className="w-9 h-9 rounded-lg bg-purple-50 flex items-center justify-center">
-                <MessageSquare size={18} color="#9333ea" />
-              </View>
-              <Text className="block text-sm text-slate-700">意见反馈</Text>
-            </View>
-          </View>
-          
-          <View className="flex items-center justify-between px-5 py-4">
             <View className="flex items-center gap-3">
               <View className="w-9 h-9 rounded-lg bg-red-50 flex items-center justify-center">
                 <LogOut size={18} color="#dc2626" />
