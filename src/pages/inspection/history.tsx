@@ -84,10 +84,14 @@ export default function InspectionHistory() {
         const statsArray = Array.from(statsMap.values())
         statsArray.sort((a, b) => b.date.localeCompare(a.date))
         
+        console.log('API返回数据条数:', list.length)
+        console.log('日期分组统计:', statsArray.map(s => s.date))
+        
         setDailyStats(statsArray)
         
         // 默认选中最近的日期（而不是强制选今天）
         if (statsArray.length > 0) {
+          console.log('设置选中日期为:', statsArray[0].date)
           setSelectedDate(statsArray[0].date)
         }
       }
