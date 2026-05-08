@@ -125,7 +125,8 @@ export default function AddInspection() {
         Taro.setStorageSync('inspector_name', inspector)
         Taro.showToast({ title: '提交成功', icon: 'success' })
         setTimeout(() => {
-          Taro.navigateBack()
+          // 返回首页刷新数据
+          Taro.switchTab({ url: '/pages/index/index' })
         }, 1500)
       } else {
         Taro.showToast({ title: res.data?.msg || '提交失败', icon: 'none' })
