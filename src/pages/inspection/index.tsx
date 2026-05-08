@@ -25,8 +25,8 @@ export default function Inspection() {
   const fetchRecords = useCallback(async () => {
     try {
       setLoading(true)
-      const res = await Network.request({ url: '/api/inspection/list' })
-      console.log('巡检记录接口返回:', res.data)
+      const res = await Network.request({ url: '/api/inspection/today-list' })
+      console.log('今日巡检记录接口返回:', res.data)
       if (res.data?.code === 200) {
         setRecords(res.data.data?.inspections || [])
       }

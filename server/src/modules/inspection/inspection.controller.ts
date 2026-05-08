@@ -26,6 +26,13 @@ export class InspectionController {
     return { code: 200, msg: 'success', data: { inspections: data } };
   }
 
+  // 获取今日巡检记录（用于器械巡检页面）
+  @Get('today-list')
+  async getTodayList(@Query('area') area?: string, @Query('status') status?: string) {
+    const data = await this.inspectionService.getTodayInspectionList(area, status);
+    return { code: 200, msg: 'success', data: { inspections: data } };
+  }
+
   // 获取待巡检器械（有磨损+故障）
   @Get('pending-equipment')
   async getPendingEquipment() {

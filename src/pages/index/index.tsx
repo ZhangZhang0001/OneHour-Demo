@@ -194,6 +194,8 @@ export default function Index() {
   )
 }
 
-typeof definePageConfig === 'function'
+const pageConfig = typeof definePageConfig === 'function'
   ? definePageConfig({ navigationBarTitleText: '首页' })
   : { navigationBarTitleText: '首页' }
+
+export { pageConfig }

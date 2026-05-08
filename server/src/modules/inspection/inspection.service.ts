@@ -131,6 +131,26 @@ export class InspectionService {
     return result.data || [];
   }
 
+  // 获取今日巡检记录（用于器械巡检页面）
+  async getTodayInspectionList(area?: string, status?: string) {
+    const todayDate = this.getToday();
+    let query = this.supabase
+      .from('equipment_inspections')
+      .select('*')
+      .eq('inspection_date', todayDate)
+      .order('created_at', { ascending: false });
+
+    if (area) {
+      query = query.eq('area', area);
+    }
+    if (status) {
+      query = query.eq('status', status);
+    }
+
+    const result = await query;
+    return result.data || [];
+  }
+
   // 根据ID列表获取器械名称
   async getEquipmentNamesByIds(ids: number[]): Promise<string[]> {
     const { data, error } = await this.supabase
