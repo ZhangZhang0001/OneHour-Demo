@@ -62,13 +62,13 @@ export default function Index() {
           <View className="flex flex-col items-center">
             {/* 上边 */}
             <View className="mb-5">
-              <Text className="block text-xl text-gray-500 tracking-wider">
+              <Text className="block text-2xl text-gray-600 tracking-wider">
                 不用和别人比
               </Text>
             </View>
             {/* 下边 */}
             <View>
-              <Text className="block text-3xl font-bold text-gray-900 tracking-wider">
+              <Text className="block text-4xl font-bold text-gray-900 tracking-wider">
                 每天只赢<Text className="text-red-500">自己一小时</Text>
               </Text>
             </View>
