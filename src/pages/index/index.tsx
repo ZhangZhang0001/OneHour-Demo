@@ -59,16 +59,16 @@ export default function Index() {
       <ScrollView scrollY className="h-screen pb-safe">
         {/* 励志标语区域 */}
         <View className="mx-4 my-5 bg-white rounded-xl px-6 py-8 shadow-sm">
-          <View className="flex flex-row items-center justify-between">
-            {/* 左边 */}
-            <View className="border-l-2 border-red-500 pl-5">
+          <View className="flex flex-col items-center">
+            {/* 上边 */}
+            <View className="border-t-2 border-red-500 pt-5 mb-5">
               <Text className="block text-lg text-gray-400 tracking-wider">
                 不用和别人比
               </Text>
             </View>
-            {/* 右边 */}
+            {/* 下边 */}
             <View>
-              <Text className="block text-3xl font-bold text-gray-900 tracking-wider">
+              <Text className="block text-2xl font-bold text-gray-900 tracking-wider">
                 每天只赢<Text className="text-red-500">自己一小时</Text>
               </Text>
             </View>
