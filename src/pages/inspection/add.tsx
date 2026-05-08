@@ -126,7 +126,7 @@ export default function AddInspection() {
         Taro.showToast({ title: '提交成功', icon: 'success' })
         setTimeout(() => {
           // 返回首页刷新数据
-          Taro.switchTab({ url: '/pages/index/index' })
+          Taro.eventCenter.trigger('reloadHome'); Taro.switchTab({ url: '/pages/index/index' })
         }, 1500)
       } else {
         Taro.showToast({ title: res.data?.msg || '提交失败', icon: 'none' })
