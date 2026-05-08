@@ -26,10 +26,6 @@ export default function Index() {
   const [feedbackType, setFeedbackType] = useState<'suggestion' | 'need' | 'problem'>('suggestion')
   const [feedbackContent, setFeedbackContent] = useState('')
 
-  useEffect(() => {
-    fetchData()
-  }, [])
-
   const fetchData = async () => {
     try {
       setLoading(true)
@@ -57,6 +53,14 @@ export default function Index() {
       setLoading(false)
     }
   }
+
+  // 页面加载时获取数据
+  useEffect(() => {
+    fetchData()
+    // 每2秒刷新一次数据
+    const timer = setInterval(fetchData, 2000)
+    return () => clearInterval(timer)
+  }, [])
 
   const navigateTo = (path: string) => {
     if (path.startsWith('/')) {
@@ -218,35 +222,36 @@ export default function Index() {
                     key={item.key}
                     className={`px-4 py-2 rounded-full text-sm ${
                       feedbackType === item.key
-                        ? `bg-${item.color}-500 text-white`
+                        ? 'bg-blue-500 text-white'
                         : 'bg-slate-100 text-slate-600'
                     }`}
-                    onClick={() => setFeedbackType(item.key as any)}
+                    onClick={() => setFeedbackType(item.key as 'suggestion' | 'need' | 'problem')}
                   >
                     {item.label}
                   </View>
                 ))}
               </View>
-              
+
               <View className="bg-slate-50 rounded-2xl p-4 mb-4">
-                <Text className="block text-sm text-slate-500 mb-2">反馈内容</Text>
-                <View className="bg-white rounded-xl px-3 py-3">
-                  <Input
-                    className="w-full text-sm text-slate-800"
-                    placeholder="请输入您的反馈..."
-                    value={feedbackContent}
-                    onInput={(e: any) => setFeedbackContent(e.detail.value)}
-                    style={{ minHeight: '80px', textAlign: 'left' }}
-                  />
-                </View>
+                <Input
+                  className="w-full bg-transparent text-sm"
+                  placeholder="请输入您的反馈..."
+                  value={feedbackContent}
+                  onInput={(e: any) => setFeedbackContent(e.detail.value)}
+                  maxlength={500}
+                />
               </View>
-              
+
               <View className="flex gap-3">
                 <View className="flex-1" onClick={() => setShowFeedback(false)}>
-                  <View className="w-full bg-slate-100 text-slate-600 rounded-xl py-3 text-center">取消</View>
+                  <View className="w-full py-3 rounded-xl bg-slate-100 text-center">
+                    <Text className="block text-slate-600">取消</Text>
+                  </View>
                 </View>
                 <View className="flex-1" onClick={handleSubmitFeedback}>
-                  <View className="w-full bg-blue-500 text-white rounded-xl py-3 text-center">提交</View>
+                  <View className="w-full py-3 rounded-xl bg-blue-500 text-center">
+                    <Text className="block text-white">提交反馈</Text>
+                  </View>
                 </View>
               </View>
             </View>
@@ -256,3 +261,7 @@ export default function Index() {
     </View>
   )
 }
+
+
+
+

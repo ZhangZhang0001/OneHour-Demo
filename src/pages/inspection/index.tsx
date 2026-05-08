@@ -1,8 +1,7 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { View, Text } from '@tarojs/components'
 import Taro from '@tarojs/taro'
-import { Wrench, Plus, ArrowRight, RotateCcw } from 'lucide-react-taro'
-import { Button } from '@/components/ui/button'
+import { Wrench, Plus, RotateCcw } from 'lucide-react-taro'
 import { Network } from '@/network'
 
 interface InspectionRecord {
@@ -23,14 +22,12 @@ export default function Inspection() {
   const [loading, setLoading] = useState(true)
   const [filterStatus, setFilterStatus] = useState<FilterStatus>('all')
 
-  useEffect(() => {
-    fetchRecords()
-  }, [])
-
-  const fetchRecords = async () => {
+  // 获取巡检记录
+  const fetchRecords = useCallback(async () => {
     try {
       setLoading(true)
       const res = await Network.request({ url: '/api/inspection/list' })
+      console.log('巡检记录接口返回:', res.data)
       if (res.data?.code === 200) {
         setRecords(res.data.data?.inspections || [])
       }
@@ -39,9 +36,13 @@ export default function Inspection() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
 
-  // 重置器械数据（强制同步ABC区29个器械）
+  useEffect(() => {
+    fetchRecords()
+  }, [fetchRecords])
+
+  // 重置器械数据
   const handleResetEquipment = async () => {
     try {
       const res = await Taro.showModal({
@@ -67,7 +68,7 @@ export default function Inspection() {
         icon: 'success' 
       })
       
-      // 刷新数据
+      // 重新获取巡检记录
       fetchRecords()
     } catch (error) {
       Taro.hideLoading()
@@ -108,22 +109,22 @@ export default function Inspection() {
       </View>
 
       {/* 添加按钮 */}
-      <View className="px-4 pb-3">
+      <View className="px-4 pb-3 pt-3">
         <View className="flex gap-2">
-          <View className="flex-1">
-            <Button className="w-full" onClick={() => navigateTo('/pages/inspection/add')}>
-              <Plus size={18} color="#ffffff" />
-              <Text className="ml-2 text-white">新增巡检记录</Text>
-            </Button>
+          <View 
+            className="flex-1 bg-blue-500 rounded-lg py-3 px-4 flex items-center justify-center"
+            onClick={() => navigateTo('/pages/inspection/add')}
+          >
+            <Plus size={18} color="#ffffff" />
+            <Text className="ml-2 text-white font-medium">新增巡检记录</Text>
           </View>
-          <Button 
-            className="bg-orange-500 border-orange-500" 
-            variant="outline"
+          <View 
+            className="bg-orange-500 rounded-lg py-3 px-4 flex items-center justify-center"
             onClick={handleResetEquipment}
           >
             <RotateCcw size={16} color="#ffffff" />
             <Text className="ml-1 text-white text-sm">重置器械</Text>
-          </Button>
+          </View>
         </View>
       </View>
 
@@ -145,68 +146,94 @@ export default function Inspection() {
               }`}
               onClick={() => setFilterStatus(item.key as FilterStatus)}
             >
-              {item.label}
+              <Text className={`text-sm ${filterStatus === item.key ? 'text-white' : 'text-slate-600'}`}>
+                {item.label}
+              </Text>
             </View>
           ))}
         </View>
       </View>
 
-      {/* 记录列表 */}
-      <View className="px-4 pb-4">
-        {loading ? (
-          <View className="bg-white rounded-xl p-8 text-center">
-            <Text className="block text-slate-500">加载中...</Text>
+      {/* 统计卡片 */}
+      <View className="px-4 pb-3">
+        <View className="bg-white rounded-lg p-4">
+          <View className="flex justify-around">
+            <View className="text-center">
+              <Text className="block text-2xl font-bold text-slate-800">{records.length}</Text>
+              <Text className="block text-xs text-slate-500 mt-1">全部记录</Text>
+            </View>
+            <View className="text-center">
+              <Text className="block text-2xl font-bold text-green-600">
+                {records.filter(r => r.status === 'normal').length}
+              </Text>
+              <Text className="block text-xs text-slate-500 mt-1">正常</Text>
+            </View>
+            <View className="text-center">
+              <Text className="block text-2xl font-bold text-orange-600">
+                {records.filter(r => r.status === 'pending').length}
+              </Text>
+              <Text className="block text-xs text-slate-500 mt-1">待维修</Text>
+            </View>
+            <View className="text-center">
+              <Text className="block text-2xl font-bold text-red-600">
+                {records.filter(r => r.status === 'broken').length}
+              </Text>
+              <Text className="block text-xs text-slate-500 mt-1">故障</Text>
+            </View>
           </View>
-        ) : filteredRecords.length > 0 ? (
-          filteredRecords.map((record) => {
-            const config = getStatusConfig(record.status)
+        </View>
+      </View>
+
+      {/* 记录列表 */}
+      <View className="px-4 pb-8">
+        {loading ? (
+          <View className="py-8 text-center">
+            <Text className="block text-slate-400">加载中...</Text>
+          </View>
+        ) : filteredRecords.length === 0 ? (
+          <View className="py-8 text-center bg-white rounded-lg">
+            <Wrench size={48} color="#cbd5e1" />
+            <Text className="block text-slate-400 mt-4">暂无巡检记录</Text>
+          </View>
+        ) : (
+          filteredRecords.map(record => {
+            const statusConfig = getStatusConfig(record.status)
             return (
-              <View 
-                key={record.id}
-                className="bg-white rounded-xl mb-3 overflow-hidden"
-                onClick={() => navigateTo(`/pages/inspection/detail?id=${record.id}`)}
-              >
-                <View className="p-4">
-                  <View className="flex items-start gap-3">
-                    <View className="w-12 h-12 rounded-xl bg-indigo-100 flex items-center justify-center flex-shrink-0">
-                      <Wrench size={24} color="#6366f1" />
-                    </View>
-                    <View className="flex-1">
-                      <View className="flex items-center gap-2">
-                        <Text className="block text-base font-medium text-slate-800">{record.equipment_name}</Text>
-                        <View className={`px-2 py-1 rounded text-xs ${config.color}`}>
-                          {config.label}
-                        </View>
-                      </View>
-                      <Text className="block text-sm text-slate-500 mt-1">
-                        区域：{record.area}区 | 检查人：{record.inspector}
-                      </Text>
-                      {record.remark && (
-                        <Text className="block text-sm text-slate-400 mt-1 line-clamp-1">
-                          备注：{record.remark}
-                        </Text>
-                      )}
-                      <Text className="block text-xs text-slate-400 mt-2">
-                        {new Date(record.created_at).toLocaleDateString('zh-CN')}
-                      </Text>
-                    </View>
-                    <ArrowRight size={20} color="#94a3b8" />
+              <View key={record.id} className="bg-white rounded-lg p-4 mb-3">
+                <View className="flex justify-between items-start mb-2">
+                  <View>
+                    <Text className="block text-base font-medium text-slate-800">
+                      {record.equipment_name}
+                    </Text>
+                    <Text className="block text-sm text-slate-400 mt-1">
+                      {record.area}区 · {record.inspector || '未知'}
+                    </Text>
                   </View>
+                  <View className={`px-3 py-1 rounded-full ${statusConfig.color}`}>
+                    <Text className="text-sm">{statusConfig.label}</Text>
+                  </View>
+                </View>
+                {record.remark && (
+                  <View className="mt-2 pt-2 border-t border-slate-100">
+                    <Text className="block text-sm text-slate-500">{record.remark}</Text>
+                  </View>
+                )}
+                <View className="mt-2 flex items-center">
+                  <Text className="block text-xs text-slate-400">
+                    {record.created_at ? new Date(record.created_at).toLocaleString('zh-CN') : ''}
+                  </Text>
                 </View>
               </View>
             )
           })
-        ) : (
-          <View className="bg-white rounded-xl p-8 text-center">
-            <Wrench size={48} color="#cbd5e1" />
-            <Text className="block text-slate-500 mt-3">暂无巡检记录</Text>
-            <Text className="block text-sm text-slate-400 mt-1">点击上方按钮新增巡检记录</Text>
-          </View>
         )}
       </View>
-
-      {/* 底部安全区域 */}
-      <View className="h-safe" />
     </View>
   )
 }
+
+const config = typeof definePageConfig === 'function'
+  ? definePageConfig({ navigationBarTitleText: '器械巡检' })
+  : { navigationBarTitleText: '器械巡检' }
+
+export { config }
