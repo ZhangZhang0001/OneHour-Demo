@@ -40,10 +40,17 @@ export default function Index() {
       ])
       
       if (statsRes.data?.code === 200) {
-        setStats(statsRes.data.data)
+        // 接口返回 { totalEquipment, todayInspected, todayPending, todayUninspected }
+        const data = statsRes.data.data
+        setStats({
+          todayUninspected: data.todayUninspected || 0,
+          pendingRepairs: data.todayPending || 0,
+          totalInspections: data.todayInspected || 0,
+        })
       }
       if (uninspectedRes.data?.code === 200) {
-        setUninspectedList(uninspectedRes.data.data || [])
+        // 接口返回 { equipment: [...] } 格式
+        setUninspectedList(uninspectedRes.data.data?.equipment || uninspectedRes.data.data || [])
       }
     } catch (err) {
       console.error('获取数据失败', err)
@@ -54,7 +61,13 @@ export default function Index() {
 
   const navigateTo = (path: string) => {
     if (path.startsWith('/')) {
-      Taro.navigateTo({ url: path })
+      // TabBar 页面需要用 switchTab，普通页面用 navigateTo
+      const tabBarPages = ['/pages/index/index', '/pages/training/index', '/pages/inspection/index', '/pages/profile/index']
+      if (tabBarPages.includes(path)) {
+        Taro.switchTab({ url: path })
+      } else {
+        Taro.navigateTo({ url: path })
+      }
     }
   }
 
