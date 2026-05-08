@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import Taro from '@tarojs/taro'
 import { View, Text } from '@tarojs/components'
-import { Dumbbell, Phone, MessageSquare, History, BookOpen, ChartBar, MessageCircle, LogOut } from 'lucide-react-taro'
+import { Dumbbell, Phone, MessageSquare, History } from 'lucide-react-taro'
 
 interface GymInfo {
   name: string
@@ -27,15 +27,8 @@ export default function Profile() {
   }
 
   const dataManagementItems = [
-    { icon: MessageSquare, label: '反馈管理', color: 'bg-purple-50', iconColor: '#9333ea', url: '/pages/feedback/index' },
-    { icon: History, label: '巡检历史', color: 'bg-blue-50', iconColor: '#3b82f6', url: '/pages/history/index' },
-    { icon: BookOpen, label: '培训资料', color: 'bg-amber-50', iconColor: '#d97706', url: '/pages/training/index' },
-    { icon: ChartBar, label: '数据统计', color: 'bg-green-50', iconColor: '#16a34a', url: '/pages/statistics/index' },
-  ]
-
-  const systemItems = [
-    { icon: MessageCircle, label: '意见反馈', color: 'bg-purple-50', iconColor: '#9333ea' },
-    { icon: LogOut, label: '退出登录', color: 'bg-red-50', iconColor: '#dc2626' },
+    { icon: MessageSquare, label: '匿名反馈', color: 'bg-purple-50', iconColor: '#9333ea', url: '/pages/feedback/index' },
+    { icon: History, label: '巡检记录', color: 'bg-blue-50', iconColor: '#3b82f6', url: '/pages/history/index' },
   ]
 
   return (
@@ -53,33 +46,6 @@ export default function Profile() {
           <View>
             <Text className="block text-lg font-semibold text-slate-800">{userInfo?.name || '健身房员工'}</Text>
             <Text className="block text-sm text-slate-400 mt-1">员工</Text>
-          </View>
-        </View>
-      </View>
-
-      {/* 健身房信息 */}
-      <View className="px-4 mt-4">
-        <View className="bg-white rounded-2xl p-5">
-          <Text className="block text-sm font-medium text-slate-500 mb-4">健身房信息</Text>
-          
-          <View className="flex items-center gap-3 mb-4">
-            <View className="w-10 h-10 rounded-xl bg-orange-50 flex items-center justify-center">
-              <Dumbbell size={20} color="#ea580c" />
-            </View>
-            <View className="flex-1">
-              <Text className="block text-xs text-slate-400 mb-1">场馆名称</Text>
-              <Text className="block text-sm text-slate-800 font-medium">{gymInfo.name}</Text>
-            </View>
-          </View>
-          
-          <View className="flex items-center gap-3">
-            <View className="w-10 h-10 rounded-xl bg-green-50 flex items-center justify-center">
-              <Phone size={20} color="#16a34a" />
-            </View>
-            <View className="flex-1">
-              <Text className="block text-xs text-slate-400 mb-1">联系电话</Text>
-              <Text className="block text-sm text-slate-800 font-medium">{gymInfo.phone}</Text>
-            </View>
           </View>
         </View>
       </View>
@@ -105,23 +71,29 @@ export default function Profile() {
         </View>
       </View>
 
-      {/* 系统 */}
+      {/* 健身房信息 */}
       <View className="px-4 mt-4">
-        <Text className="block text-sm font-medium text-slate-500 mb-3 px-1">系统</Text>
-        <View className="bg-white rounded-2xl overflow-hidden">
-          {systemItems.map((item, index) => (
-            <View 
-              key={item.label}
-              className={`flex items-center justify-between px-5 py-4 ${index < systemItems.length - 1 ? 'border-b border-slate-100' : ''}`}
-            >
-              <View className="flex items-center gap-3">
-                <View className={`w-9 h-9 rounded-lg flex items-center justify-center ${item.color}`}>
-                  <item.icon size={18} color={item.iconColor} />
-                </View>
-                <Text className={`block text-sm ${item.label === '退出登录' ? 'text-red-600' : 'text-slate-700'}`}>{item.label}</Text>
-              </View>
+        <Text className="block text-sm font-medium text-slate-500 mb-3 px-1">健身房信息</Text>
+        <View className="bg-white rounded-2xl p-5">
+          <View className="flex items-center gap-3 mb-4">
+            <View className="w-10 h-10 rounded-xl bg-orange-50 flex items-center justify-center">
+              <Dumbbell size={20} color="#ea580c" />
             </View>
-          ))}
+            <View className="flex-1">
+              <Text className="block text-xs text-slate-400 mb-1">名称</Text>
+              <Text className="block text-sm text-slate-800 font-medium">{gymInfo.name}</Text>
+            </View>
+          </View>
+          
+          <View className="flex items-center gap-3">
+            <View className="w-10 h-10 rounded-xl bg-green-50 flex items-center justify-center">
+              <Phone size={20} color="#16a34a" />
+            </View>
+            <View className="flex-1">
+              <Text className="block text-xs text-slate-400 mb-1">电话</Text>
+              <Text className="block text-sm text-slate-800 font-medium">{gymInfo.phone}</Text>
+            </View>
+          </View>
         </View>
       </View>
 
