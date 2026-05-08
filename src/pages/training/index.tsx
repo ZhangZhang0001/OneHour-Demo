@@ -78,7 +78,7 @@ export default function Training() {
 
       {/* 添加按钮 */}
       <View className="px-4 pb-3">
-        <Button className="w-full" onClick={() => Taro.showToast({ title: '上传功能开发中', icon: 'none' })}>
+        <Button className="w-full" onClick={() => Taro.navigateTo({ url: '/pages/training/upload' })}>
           <Plus size={18} color="#ffffff" />
           <Text className="ml-2 text-white">上传培训资料</Text>
         </Button>

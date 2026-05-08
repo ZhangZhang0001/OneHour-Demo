@@ -3,6 +3,7 @@ export default defineAppConfig({
     'pages/index/index',
     'pages/training/index',
     'pages/training/detail',
+    'pages/training/upload',
     'pages/inspection/index',
     'pages/inspection/add',
     'pages/inspection/detail',
