@@ -32,7 +32,7 @@ export default function Inspection() {
       setLoading(true)
       const res = await Network.request({ url: '/api/inspection/list' })
       if (res.data?.code === 200) {
-        setRecords(res.data.data || [])
+        setRecords(res.data.data?.inspections || [])
       }
     } catch (err) {
       console.error('获取巡检记录失败', err)
