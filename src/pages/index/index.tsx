@@ -62,7 +62,7 @@ export default function Index() {
           <View className="flex flex-col items-center">
             {/* 上边 */}
             <View className="mb-5">
-              <Text className="block text-xl text-gray-400 tracking-wider">
+              <Text className="block text-xl text-gray-500 tracking-wider">
                 不用和别人比
               </Text>
             </View>
