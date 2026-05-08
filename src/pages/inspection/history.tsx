@@ -27,7 +27,7 @@ interface DailyStats {
 
 const statusConfig: Record<string, { label: string; color: string; bgColor: string }> = {
   normal: { label: '正常', color: 'text-green-600', bgColor: 'bg-green-100' },
-  pending: { label: '待维修', color: 'text-orange-600', bgColor: 'bg-orange-100' },
+  pending: { label: '有磨损', color: 'text-orange-600', bgColor: 'bg-orange-100' },
   fault: { label: '故障', color: 'text-red-600', bgColor: 'bg-red-100' },
 }
 
@@ -195,7 +195,7 @@ export default function InspectionHistory() {
                     <Text className="block text-lg font-bold text-orange-600">
                       {dailyStats.find(s => s.date === selectedDate)?.pending || 0}
                     </Text>
-                    <Text className="block text-xs text-orange-500">待维修</Text>
+                    <Text className="block text-xs text-orange-500">有磨损</Text>
                   </View>
                   <View className="bg-red-50 rounded-lg p-2 text-center">
                     <Text className="block text-lg font-bold text-red-600">

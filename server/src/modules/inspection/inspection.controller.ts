@@ -26,7 +26,7 @@ export class InspectionController {
     return { code: 200, msg: 'success', data: { inspections: data } };
   }
 
-  // 获取待巡检器械（待维修+故障）
+  // 获取待巡检器械（有磨损+故障）
   @Get('pending-equipment')
   async getPendingEquipment() {
     const data = await this.inspectionService.getPendingInspections();
@@ -84,7 +84,7 @@ export class InspectionController {
     return { code: 200, msg: 'success', data };
   }
 
-  // 获取待巡检数量（待维修+故障）
+  // 获取待巡检数量（有磨损+故障）
   @Get('pending-count')
   async getPendingCount() {
     const data = await this.inspectionService.getStats();

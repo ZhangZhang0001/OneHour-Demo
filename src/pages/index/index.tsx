@@ -93,7 +93,7 @@ export default function Index() {
               </View>
               <View className="bg-amber-50 rounded-xl p-3">
                 <Text className="block text-2xl font-bold text-amber-600">{stats.todayPending}</Text>
-                <Text className="block text-xs text-amber-500 mt-1">待维修</Text>
+                <Text className="block text-xs text-amber-500 mt-1">有磨损</Text>
               </View>
               <View className="bg-red-50 rounded-xl p-3">
                 <Text className="block text-2xl font-bold text-red-600">{stats.todayFault}</Text>

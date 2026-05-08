@@ -222,7 +222,7 @@ export class InspectionService {
     };
   }
 
-  // 获取待处理巡检（待维修+故障）
+  // 获取待处理巡检（有磨损+故障）
   async getPendingInspections() {
     const result = await this.supabase
       .from('equipment_inspections')
@@ -414,7 +414,7 @@ export class InspectionService {
         .eq('inspection_date', today)
         .eq('area', area);
       
-      // 获取该区域待维修数
+      // 获取该区域有磨损数
       const pendingResult = await this.supabase
         .from('equipment_inspections')
         .select('id')

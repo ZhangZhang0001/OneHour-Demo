@@ -245,7 +245,7 @@ export default function AddInspection() {
           <View className="flex gap-3">
             {[
               { key: 'normal', label: '正常', color: 'green' },
-              { key: 'pending', label: '待维修', color: 'orange' },
+              { key: 'pending', label: '有磨损', color: 'orange' },
               { key: 'fault', label: '故障', color: 'red' },
             ].map((item) => (
               <View

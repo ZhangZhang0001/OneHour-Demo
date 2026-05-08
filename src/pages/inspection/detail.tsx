@@ -50,7 +50,7 @@ export default function InspectionDetail() {
   const getStatusBadge = (status: string) => {
     const statusMap = {
       normal: { label: '正常', color: 'bg-green-500' },
-      pending: { label: '待维修', color: 'bg-orange-500' },
+      pending: { label: '有磨损', color: 'bg-orange-500' },
       fault: { label: '故障', color: 'bg-red-500' }
     }
     const config = statusMap[status as keyof typeof statusMap] || statusMap.normal

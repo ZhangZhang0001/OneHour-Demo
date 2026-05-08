@@ -55,7 +55,7 @@ export default function Inspection() {
       case 'normal':
         return { label: '正常', color: 'bg-green-100 text-green-700' }
       case 'pending':
-        return { label: '待维修', color: 'bg-orange-100 text-orange-700' }
+        return { label: '有磨损', color: 'bg-orange-100 text-orange-700' }
       case 'fault':
         return { label: '故障', color: 'bg-red-100 text-red-700' }
       default:
@@ -91,7 +91,7 @@ export default function Inspection() {
           {[
             { key: 'all', label: '全部' },
             { key: 'normal', label: '正常' },
-            { key: 'pending', label: '待维修' },
+            { key: 'pending', label: '有磨损' },
             { key: 'fault', label: '故障' }
           ].map(item => (
             <View 
@@ -128,7 +128,7 @@ export default function Inspection() {
               <Text className="block text-2xl font-bold text-orange-600">
                 {records.filter(r => r.status === 'pending').length}
               </Text>
-              <Text className="block text-xs text-slate-500 mt-1">待维修</Text>
+              <Text className="block text-xs text-slate-500 mt-1">有磨损</Text>
             </View>
             <View className="text-center">
               <Text className="block text-2xl font-bold text-red-600">
