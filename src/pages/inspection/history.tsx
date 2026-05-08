@@ -86,12 +86,8 @@ export default function InspectionHistory() {
         
         setDailyStats(statsArray)
         
-        // 默认选中今天
-        const today = new Date().toISOString().split('T')[0]
-        const todayStats = statsArray.find(s => s.date === today)
-        if (todayStats) {
-          setSelectedDate(today)
-        } else if (statsArray.length > 0) {
+        // 默认选中最近的日期（而不是强制选今天）
+        if (statsArray.length > 0) {
           setSelectedDate(statsArray[0].date)
         }
       }
