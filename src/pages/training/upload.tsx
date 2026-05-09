@@ -91,7 +91,7 @@ export default function TrainingUpload() {
       console.log('result.data:', result.data)
 
       // 解析响应 - 确保正确获取响应数据
-      let responseData = result.data
+      let responseData: any = result.data
       if (typeof responseData === 'string') {
         responseData = JSON.parse(responseData)
       }

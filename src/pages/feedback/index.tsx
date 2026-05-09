@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { View, Text } from '@tarojs/components'
 import Taro from '@tarojs/taro'
 import { ArrowLeft, MessageSquare, Lightbulb, Package, Info, Check, Trash2 } from 'lucide-react-taro'
+import { Button } from '@/components/ui/button'
 import { Network } from '@/network'
 
 interface FeedbackItem {
@@ -23,10 +24,53 @@ export default function FeedbackList() {
   const [feedbackList, setFeedbackList] = useState<FeedbackItem[]>([])
   const [loading, setLoading] = useState(true)
   const [filterType, setFilterType] = useState<string>('all')
+  const [isSelecting, setIsSelecting] = useState(false)
+  const [selectedIds, setSelectedIds] = useState<number[]>([])
 
   useEffect(() => {
     fetchFeedbackList()
   }, [])
+
+  // 切换选中状态
+  const toggleSelect = (id: number) => {
+    if (selectedIds.includes(id)) {
+      setSelectedIds(selectedIds.filter((i) => i !== id))
+    } else {
+      setSelectedIds([...selectedIds, id])
+    }
+  }
+
+  // 批量删除
+  const handleBatchDelete = async () => {
+    if (selectedIds.length === 0) return
+    Taro.showModal({
+      title: '确认删除',
+      content: `确定要删除选中的 ${selectedIds.length} 条反馈吗？`,
+      confirmColor: '#ef4444',
+      success: async (res) => {
+        if (res.confirm) {
+          try {
+            const result = await Network.request({
+              url: '/api/feedback/batch-delete',
+              method: 'POST',
+              data: { ids: selectedIds },
+            })
+            if (result.data?.code === 200) {
+              Taro.showToast({ title: '已删除', icon: 'success' })
+              setSelectedIds([])
+              setIsSelecting(false)
+              fetchFeedbackList()
+            } else {
+              Taro.showToast({ title: result.data?.msg || '删除失败', icon: 'none' })
+            }
+          } catch (err) {
+            console.error('批量删除失败', err)
+            Taro.showToast({ title: '删除失败', icon: 'none' })
+          }
+        }
+      },
+    })
+  }
 
   const fetchFeedbackList = async () => {
     try {
@@ -145,6 +189,21 @@ export default function FeedbackList() {
         </View>
       </View>
 
+      {/* 选择/取消按钮 */}
+      <View className="px-4 py-2 bg-white border-b border-slate-100 flex justify-end">
+        <View 
+          className="px-3 py-1 bg-blue-500 text-white text-sm rounded"
+          onClick={() => {
+            if (isSelecting) {
+              setSelectedIds([])
+            }
+            setIsSelecting(!isSelecting)
+          }}
+        >
+          {isSelecting ? '取消选择' : '选择'}
+        </View>
+      </View>
+
       {/* 筛选标签 */}
       <View className="px-4 py-3 bg-white border-b border-slate-100">
         <View className="flex gap-2">
@@ -181,66 +240,77 @@ export default function FeedbackList() {
             const isResolved = item.status === '1'
             
             return (
-              <View 
-                key={item.id}
-                className={`bg-white rounded-xl mb-3 overflow-hidden ${isResolved ? 'opacity-60' : ''}`}
-              >
-                <View className="p-4">
-                  <View className="flex items-center gap-3 mb-3">
-                    <View className={`w-10 h-10 rounded-full ${config.bgColor} flex items-center justify-center`}>
-                      <config.icon size={18} color={config.color.includes('blue') ? '#2563eb' : config.color.includes('purple') ? '#9333ea' : '#dc2626'} />
+              <View key={item.id} className="flex items-center mb-3">
+                {isSelecting && (
+                  <View onClick={() => toggleSelect(item.id)} className="mr-3">
+                    <View
+                      style={{
+                        width: 22, height: 22,
+                        borderRadius: 11,
+                        border: selectedIds.includes(item.id) ? 'none' : '2px solid #D1D5DB',
+                        backgroundColor: selectedIds.includes(item.id) ? '#2563EB' : 'white',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center'
+                      }}
+                    >
+                      {selectedIds.includes(item.id) && <Check size={14} color="white" />}
                     </View>
-                    <View className="flex-1">
-                      <Text className={`block text-sm font-medium ${isResolved ? 'text-slate-500' : 'text-slate-800'}`}>{config.label}</Text>
-                      <Text className="block text-xs text-slate-400">{formatDate(item.created_at)}</Text>
-                    </View>
-                    {isResolved ? (
-                      // 已处理状态标签
-                      <View className="px-3 py-1 rounded-full text-xs bg-green-100 text-green-600 flex items-center gap-1">
-                        <Check size={12} color="#16a34a" />
-                        <Text className="text-xs text-green-600">已处理</Text>
+                  </View>
+                )}
+                <View className={`flex-1 bg-white rounded-xl overflow-hidden ${isResolved ? 'opacity-60' : ''}`}>
+                  <View className="p-4">
+                    <View className="flex items-center gap-3 mb-3">
+                      <View className={`w-10 h-10 rounded-full ${config.bgColor} flex items-center justify-center`}>
+                        <config.icon size={18} color={config.color.includes('blue') ? '#2563eb' : config.color.includes('purple') ? '#9333ea' : '#dc2626'} />
                       </View>
-                    ) : (
-                      // 待处理状态标签
-                      <View className={`px-3 py-1 rounded-full text-xs ${config.bgColor} ${config.color}`}>
-                        {config.label}
+                      <View className="flex-1">
+                        <Text className={`block text-sm font-medium ${isResolved ? 'text-slate-500' : 'text-slate-800'}`}>{config.label}</Text>
+                        <Text className="block text-xs text-slate-400">{formatDate(item.created_at)}</Text>
+                      </View>
+                      {isResolved ? (
+                        <View className="px-3 py-1 rounded-full text-xs bg-green-100 text-green-600 flex items-center gap-1">
+                          <Check size={12} color="#16a34a" />
+                          <Text className="text-xs text-green-600">已处理</Text>
+                        </View>
+                      ) : (
+                        <View className={`px-3 py-1 rounded-full text-xs ${config.bgColor} ${config.color}`}>
+                          {config.label}
+                        </View>
+                      )}
+                    </View>
+                    
+                    <View className="bg-slate-50 rounded-xl p-3 mb-3">
+                      <Text className={`block text-sm leading-relaxed ${isResolved ? 'text-slate-400' : 'text-slate-700'}`}>{item.content}</Text>
+                    </View>
+
+                    {isResolved && item.handle_time && (
+                      <Text className="block text-xs text-green-600 mb-2">
+                        处理时间：{formatHandleTime(item.handle_time)}
+                      </Text>
+                    )}
+
+                    {!isResolved && (
+                      <View className="flex justify-end gap-2 mt-2">
+                        <View
+                          className="flex items-center gap-1 px-3 py-2 rounded-full bg-red-50 text-red-500"
+                          onClick={() => handleDelete(item.id)}
+                        >
+                          <Trash2 size={14} color="#ef4444" />
+                          <Text className="text-xs text-red-500">删除</Text>
+                        </View>
+                        <View
+                          className="flex items-center gap-1 px-3 py-2 rounded-full bg-green-500 text-white"
+                          onClick={() => handleResolve(item.id)}
+                        >
+                          <Check size={14} color="#ffffff" />
+                          <Text className="text-xs text-white">标记已处理</Text>
+                        </View>
                       </View>
                     )}
                   </View>
-                  
-                  <View className="bg-slate-50 rounded-xl p-3 mb-3">
-                    <Text className={`block text-sm leading-relaxed ${isResolved ? 'text-slate-400' : 'text-slate-700'}`}>{item.content}</Text>
-                  </View>
-
-                  {/* 处理时间 */}
-                  {isResolved && item.handle_time && (
-                    <Text className="block text-xs text-green-600 mb-2">
-                      处理时间：{formatHandleTime(item.handle_time)}
-                    </Text>
-                  )}
-
-                  {/* 操作按钮 - 仅待处理显示 */}
-                  {!isResolved && (
-                    <View className="flex justify-end gap-2 mt-2">
-                      <View
-                        className="flex items-center gap-1 px-3 py-2 rounded-full bg-red-50 text-red-500"
-                        onClick={() => handleDelete(item.id)}
-                      >
-                        <Trash2 size={14} color="#ef4444" />
-                        <Text className="text-xs text-red-500">删除</Text>
-                      </View>
-                      <View
-                        className="flex items-center gap-1 px-3 py-2 rounded-full bg-green-500 text-white"
-                        onClick={() => handleResolve(item.id)}
-                      >
-                        <Check size={14} color="#ffffff" />
-                        <Text className="text-xs text-white">标记已处理</Text>
-                      </View>
-                    </View>
-                  )}
                 </View>
               </View>
             )
+
           })
         ) : (
           <View className="bg-white rounded-xl p-8 text-center">
@@ -250,6 +320,16 @@ export default function FeedbackList() {
           </View>
         )}
       </View>
+      {/* 批量删除操作栏 */}
+      {isSelecting && (
+        <View style={{ position: "fixed", bottom: 50, left: 0, right: 0, backgroundColor: "white", borderTop: "1px solid #E5E7EB", padding: "12px 16px", display: "flex", alignItems: "center", justifyContent: "space-between", zIndex: 100 }}>
+          <Text className="text-sm text-gray-600">已选 {selectedIds.length} 项</Text>
+          <View style={{ display: "flex", gap: 8 }}>
+            <Button size="sm" onClick={() => setSelectedIds([])}>取消</Button>
+            <Button size="sm" style={{ backgroundColor: selectedIds.length > 0 ? "#EF4444" : "#D1D5DB", color: "white" }} onClick={handleBatchDelete}>删除</Button>
+          </View>
+        </View>
+      )}
     </View>
   )
 }

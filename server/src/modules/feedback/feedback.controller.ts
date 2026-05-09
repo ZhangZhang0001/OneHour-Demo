@@ -160,4 +160,37 @@ export class FeedbackController {
       data: null,
     }
   }
+
+  // 批量删除反馈
+  @Post('batch-delete')
+  async batchDelete(@Body() body: { ids: number[] }) {
+    console.log('POST /api/feedback/batch-delete - ids:', body.ids)
+
+    if (!body.ids || !Array.isArray(body.ids) || body.ids.length === 0) {
+      return {
+        code: 400,
+        msg: '缺少反馈ID列表',
+        data: null,
+      }
+    }
+
+    const deletePromises = body.ids.map(id => this.feedbackService.delete(id))
+    const results = await Promise.all(deletePromises)
+
+    const failedCount = results.filter(r => r.error).length
+
+    if (failedCount > 0) {
+      return {
+        code: 500,
+        msg: `删除失败 ${failedCount} 条`,
+        data: null,
+      }
+    }
+
+    return {
+      code: 200,
+      msg: `成功删除 ${body.ids.length} 条反馈`,
+      data: null,
+    }
+  }
 }
