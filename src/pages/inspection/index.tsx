@@ -11,6 +11,7 @@ interface InspectionRecord {
   area: string
   status: 'normal' | 'pending' | 'fault'
   remark: string
+  wear_level: 'low' | 'medium' | 'high'
   inspector: string
   created_at: string
 }
@@ -198,6 +199,15 @@ export default function Inspection() {
         ) : (
           filteredRecords.map(record => {
             const statusConfig = getStatusConfig(record.status)
+            // 获取磨损程度标签
+            const getWearLevelLabel = (level: string) => {
+              switch (level) {
+                case 'low': return '轻微磨损'
+                case 'medium': return '明显磨损'
+                case 'high': return '严重磨损'
+                default: return ''
+              }
+            }
             return (
               <View key={record.id} className="bg-white rounded-lg p-4 mb-3">
                 <View className="flex justify-between items-start">
@@ -213,8 +223,20 @@ export default function Inspection() {
                     <Text className="text-xs">{statusConfig.label}</Text>
                   </View>
                 </View>
+                {/* 磨损程度标签 */}
+                {record.status === 'pending' && record.wear_level && (
+                  <View className="mt-2 inline-flex items-center px-2 py-1 rounded-full bg-orange-50 border border-orange-200">
+                    <Text className="text-xs text-orange-600">{getWearLevelLabel(record.wear_level)}</Text>
+                  </View>
+                )}
+                {/* 备注信息 */}
                 {record.remark && (
-                  <Text className="block text-sm text-slate-400 mt-2">备注：{record.remark}</Text>
+                  <View className="mt-2 p-2 bg-red-50 rounded-lg border border-red-100">
+                    <Text className="block text-xs text-red-600">
+                      <Text className="block text-red-700 font-medium">故障说明：</Text>
+                      <Text className="block mt-1">{record.remark}</Text>
+                    </Text>
+                  </View>
                 )}
                 <Text className="block text-xs text-slate-400 mt-2">
                   {new Date(record.created_at).toLocaleString('zh-CN')}

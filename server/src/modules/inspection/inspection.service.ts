@@ -234,9 +234,10 @@ export class InspectionService {
     area: string;
     status: string;
     remark?: string;
+    wearLevel?: string;
     inspector: string;
   }) {
-    const { equipmentIds, equipmentNames, area, status, remark, inspector } = data;
+    const { equipmentIds, equipmentNames, area, status, remark, wearLevel, inspector } = data;
     const todayDate = new Date().toISOString().split('T')[0];
     let updatedCount = 0;
     let insertedCount = 0;
@@ -265,6 +266,7 @@ export class InspectionService {
           area,
           status,
           remark: remark || null,
+          wear_level: wearLevel || null,
           inspector,
           inspection_date: todayDate,
         });

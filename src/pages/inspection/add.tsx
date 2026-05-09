@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import Taro from '@tarojs/taro'
 import { View, Text } from '@tarojs/components'
 import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
 import { Network } from '@/network'
 
 // 区域配置
@@ -55,6 +56,8 @@ export default function AddInspection() {
   const [selectedArea, setSelectedArea] = useState('')
   const [selectedEquipments, setSelectedEquipments] = useState<number[]>([])
   const [status, setStatus] = useState<'normal' | 'pending' | 'fault'>('normal')
+  const [remark, setRemark] = useState('')
+  const [wearLevel, setWearLevel] = useState<'low' | 'medium' | 'high'>('medium')
   const [submitting, setSubmitting] = useState(false)
 
   // 从本地存储读取上次输入的检查人
@@ -77,6 +80,19 @@ export default function AddInspection() {
       ? selectedEquipments.filter(e => e !== id)
       : [...selectedEquipments, id]
     setSelectedEquipments(newSelected)
+  }
+
+  // 选择状态时重置相关字段
+  const handleStatusChange = (newStatus: 'normal' | 'pending' | 'fault') => {
+    setStatus(newStatus)
+    // 切换到非故障状态时清空备注
+    if (newStatus !== 'fault') {
+      setRemark('')
+    }
+    // 切换到非有磨损状态时重置磨损程度
+    if (newStatus !== 'pending') {
+      setWearLevel('medium')
+    }
   }
 
   // 全选
@@ -116,6 +132,8 @@ export default function AddInspection() {
           area: selectedArea,
           equipmentIds: selectedEquipments,
           status,
+          remark: status === 'fault' ? remark : undefined,
+          wearLevel: status === 'pending' ? wearLevel : undefined,
         },
       })
       console.log('提交结果:', res.data)
@@ -250,7 +268,7 @@ export default function AddInspection() {
             ].map((item) => (
               <View
                 key={item.key}
-                onClick={() => setStatus(item.key as typeof status)}
+                onClick={() => handleStatusChange(item.key as typeof status)}
                 className={`flex-1 p-3 rounded-xl text-center ${
                   status === item.key
                     ? item.color === 'green' ? 'bg-green-500 text-white'
@@ -265,6 +283,56 @@ export default function AddInspection() {
               </View>
             ))}
           </View>
+
+          {/* 故障状态 - 备注输入 */}
+          {status === 'fault' && (
+            <View className="mt-4">
+              <Text className="block text-sm font-medium text-gray-700 mb-2">故障备注</Text>
+              <View className="bg-white rounded-xl p-4">
+                <Textarea
+                  style={{ width: '100%', minHeight: '80px', backgroundColor: 'transparent' }}
+                  placeholder="请详细描述故障情况..."
+                  maxlength={200}
+                  value={remark}
+                  onInput={(e) => setRemark(e.detail.value)}
+                />
+              </View>
+              <Text className="block text-xs text-gray-400 mt-1 text-right">{remark.length}/200</Text>
+            </View>
+          )}
+
+          {/* 有磨损状态 - 磨损程度选择 */}
+          {status === 'pending' && (
+            <View className="mt-4">
+              <Text className="block text-sm font-medium text-gray-700 mb-2">磨损程度</Text>
+              <View className="flex gap-3">
+                {[
+                  { key: 'low', label: '低', desc: '轻微磨损', color: 'yellow' },
+                  { key: 'medium', label: '中', desc: '明显磨损', color: 'orange' },
+                  { key: 'high', label: '高', desc: '严重磨损', color: 'red' },
+                ].map((item) => (
+                  <View
+                    key={item.key}
+                    onClick={() => setWearLevel(item.key as typeof wearLevel)}
+                    className={`flex-1 p-3 rounded-xl text-center ${
+                      wearLevel === item.key
+                        ? item.color === 'yellow' ? 'bg-yellow-500 text-white'
+                        : item.color === 'orange' ? 'bg-orange-500 text-white'
+                        : 'bg-red-500 text-white'
+                        : 'bg-white text-gray-700 border border-gray-200'
+                    }`}
+                  >
+                    <Text className={`block font-medium ${wearLevel === item.key ? 'text-white' : 'text-gray-700'}`}>
+                      {item.label}
+                    </Text>
+                    <Text className={`block text-xs mt-1 ${wearLevel === item.key ? 'text-white/80' : 'text-gray-400'}`}>
+                      {item.desc}
+                    </Text>
+                  </View>
+                ))}
+              </View>
+            </View>
+          )}
         </View>
       )}
 
