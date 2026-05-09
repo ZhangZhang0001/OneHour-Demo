@@ -44,6 +44,17 @@ export class FeedbackService {
     return result
   }
 
+  // 删除反馈
+  async delete(id: number) {
+    const client = getSupabaseClient()
+    const result = await client
+      .from('feedback')
+      .delete()
+      .eq('id', id)
+
+    return result
+  }
+
   // 获取反馈数量
   async count() {
     const client = getSupabaseClient()

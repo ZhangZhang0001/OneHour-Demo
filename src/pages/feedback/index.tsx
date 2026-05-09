@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { View, Text } from '@tarojs/components'
 import Taro from '@tarojs/taro'
-import { ArrowLeft, MessageSquare, Lightbulb, Package, Info, Check } from 'lucide-react-taro'
+import { ArrowLeft, MessageSquare, Lightbulb, Package, Info, Check, Trash2 } from 'lucide-react-taro'
 import { Network } from '@/network'
 
 interface FeedbackItem {
@@ -84,6 +84,35 @@ export default function FeedbackList() {
       console.error('操作失败', err)
       Taro.showToast({ title: '操作失败', icon: 'none' })
     }
+  }
+
+  // 删除反馈
+  const handleDelete = async (id: number) => {
+    Taro.showModal({
+      title: '确认删除',
+      content: '确定要删除这条反馈吗？',
+      confirmColor: '#ef4444',
+      success: async (res) => {
+        if (res.confirm) {
+          try {
+            const result = await Network.request({
+              url: '/api/feedback/delete',
+              method: 'POST',
+              data: { id },
+            })
+            if (result.data?.code === 200) {
+              Taro.showToast({ title: '已删除', icon: 'success' })
+              fetchFeedbackList()
+            } else {
+              Taro.showToast({ title: result.data?.msg || '删除失败', icon: 'none' })
+            }
+          } catch (err) {
+            console.error('删除失败', err)
+            Taro.showToast({ title: '删除失败', icon: 'none' })
+          }
+        }
+      },
+    })
   }
 
   const pendingCount = feedbackList.filter(f => f.status === '0').length
@@ -192,9 +221,16 @@ export default function FeedbackList() {
 
                   {/* 操作按钮 - 仅待处理显示 */}
                   {!isResolved && (
-                    <View className="flex justify-end mt-2">
+                    <View className="flex justify-end gap-2 mt-2">
                       <View
-                        className="flex items-center gap-1 px-4 py-2 rounded-full bg-green-500 text-white"
+                        className="flex items-center gap-1 px-3 py-2 rounded-full bg-red-50 text-red-500"
+                        onClick={() => handleDelete(item.id)}
+                      >
+                        <Trash2 size={14} color="#ef4444" />
+                        <Text className="text-xs text-red-500">删除</Text>
+                      </View>
+                      <View
+                        className="flex items-center gap-1 px-3 py-2 rounded-full bg-green-500 text-white"
                         onClick={() => handleResolve(item.id)}
                       >
                         <Check size={14} color="#ffffff" />

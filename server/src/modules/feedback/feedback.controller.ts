@@ -129,4 +129,35 @@ export class FeedbackController {
       data: result.data,
     }
   }
+
+  // 删除反馈
+  @Post('delete')
+  async delete(@Body() body: { id: number }) {
+    console.log('POST /api/feedback/delete - id:', body.id)
+
+    if (!body.id) {
+      return {
+        code: 400,
+        msg: '缺少反馈ID',
+        data: null,
+      }
+    }
+
+    const result = await this.feedbackService.delete(body.id)
+
+    if (result.error) {
+      console.error('Feedback delete error:', result.error)
+      return {
+        code: 500,
+        msg: '删除失败',
+        data: null,
+      }
+    }
+
+    return {
+      code: 200,
+      msg: '删除成功',
+      data: null,
+    }
+  }
 }
