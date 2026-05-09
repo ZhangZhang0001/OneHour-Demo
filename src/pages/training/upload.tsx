@@ -90,14 +90,14 @@ export default function TrainingUpload() {
       console.log('上传结果:', result)
 
       // 解析响应
-      const response = result.data as { code?: number; msg?: string }
-      if (response.code === 200 || response.code === 0) {
+      const responseData = result.data as { code?: number; msg?: string; data?: any }
+      if (responseData.code === 200) {
         Taro.showToast({ title: '上传成功', icon: 'success' })
         setTimeout(() => {
           Taro.navigateBack()
         }, 1500)
       } else {
-        Taro.showToast({ title: response.msg || '上传失败', icon: 'none' })
+        Taro.showToast({ title: responseData.msg || '上传失败', icon: 'none' })
       }
     } catch (err: any) {
       console.error('上传失败:', err)

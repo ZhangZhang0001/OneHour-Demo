@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { View, Text } from '@tarojs/components'
-import Taro from '@tarojs/taro'
+import Taro, { useDidShow } from '@tarojs/taro'
 import { BookOpen, Plus, Search, ArrowRight } from 'lucide-react-taro'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -18,6 +18,11 @@ export default function Training() {
   const [materials, setMaterials] = useState<TrainingMaterial[]>([])
   const [loading, setLoading] = useState(true)
   const [searchKeyword, setSearchKeyword] = useState('')
+
+  // 页面显示时刷新数据（从上传页面返回时）
+  useDidShow(() => {
+    fetchMaterials()
+  })
 
   useEffect(() => {
     fetchMaterials()
@@ -97,7 +102,11 @@ export default function Training() {
             <View 
               key={material.id}
               className="bg-white rounded-xl mb-3 overflow-hidden"
-              onClick={() => navigateTo(`/pages/training/detail?id=${material.id}`)}
+              onClick={() => {
+                // 缓存当前材料数据供详情页使用
+                Taro.setStorageSync('materialDetail', material)
+                navigateTo(`/pages/training/detail?id=${material.id}`)
+              }}
             >
               <View className="p-4">
                 <View className="flex items-start gap-3">
