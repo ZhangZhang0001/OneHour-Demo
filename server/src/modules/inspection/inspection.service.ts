@@ -245,44 +245,30 @@ export class InspectionService {
       const equipmentId = equipmentIds[i];
       const equipmentName = equipmentNames?.[i] || '';
 
-      // 检查当天是否已有该器械的巡检记录
+      // 【修复】删除该设备当天所有旧记录（状态覆盖逻辑）
+      // 不管之前是什么状态，都删除，然后添加新记录
       const startOfDay = todayDate + ' 00:00:00';
       const endOfDay = todayDate + ' 23:59:59';
-      const existingResult = await this.supabase
+      await this.supabase
         .from('equipment_inspections')
-        .select('id')
+        .delete()
         .eq('equipment_id', equipmentId)
         .gte('inspection_date', startOfDay)
-        .lte('inspection_date', endOfDay)
-        .single();
+        .lte('inspection_date', endOfDay);
 
-      if (existingResult.data) {
-        // 已存在，更新记录
-        await this.supabase
-          .from('equipment_inspections')
-          .update({
-            status,
-            remark: remark || null,
-            inspector,
-            created_at: new Date().toISOString(),
-          })
-          .eq('id', existingResult.data.id);
-        updatedCount++;
-      } else {
-        // 不存在，插入新记录
-        await this.supabase
-          .from('equipment_inspections')
-          .insert({
-            equipment_id: equipmentId,
-            equipment_name: equipmentName,
-            area,
-            status,
-            remark: remark || null,
-            inspector,
-            inspection_date: todayDate,
-          });
-        insertedCount++;
-      }
+      // 插入新记录（不管之前是什么状态，都添加新记录）
+      await this.supabase
+        .from('equipment_inspections')
+        .insert({
+          equipment_id: equipmentId,
+          equipment_name: equipmentName,
+          area,
+          status,
+          remark: remark || null,
+          inspector,
+          inspection_date: todayDate,
+        });
+      insertedCount++;
 
       // 更新器械表中的状态
       await this.supabase
