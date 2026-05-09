@@ -88,25 +88,27 @@ export default function TrainingUpload() {
       })
 
       console.log('上传结果:', result)
+      console.log('result.data:', result.data)
 
-      // 解析响应
-      const responseData = result.data as { code?: number; msg?: string; data?: any }
-      if (responseData.code === 200) {
-        Taro.showToast({ title: '上传成功', icon: 'success', duration: 1500 })
-        // 延迟跳转，让用户看到成功提示
-        setTimeout(() => {
-          Taro.navigateBack({
-            success: () => {
-              console.log('返回成功')
-            },
-            fail: () => {
-              // 如果返回失败，尝试跳转到列表页
-              Taro.reLaunch({ url: '/pages/training/index' })
-            }
-          })
-        }, 1500)
+      // 解析响应 - 确保正确获取响应数据
+      let responseData = result.data
+      if (typeof responseData === 'string') {
+        responseData = JSON.parse(responseData)
+      }
+      
+      // 检查响应是否成功
+      const isSuccess = responseData && responseData.code === 200
+      
+      if (isSuccess) {
+        console.log('上传成功，准备跳转')
+        // 先跳转，再显示提示（避免提示被跳转覆盖）
+        Taro.navigateBack().catch(() => {
+          Taro.reLaunch({ url: '/pages/training/index' })
+        })
+        Taro.showToast({ title: '上传成功', icon: 'success', duration: 2000 })
       } else {
-        Taro.showToast({ title: responseData.msg || '上传失败', icon: 'none' })
+        console.log('上传失败:', responseData)
+        Taro.showToast({ title: responseData?.msg || '上传失败', icon: 'none' })
       }
     } catch (err: any) {
       console.error('上传失败:', err)
