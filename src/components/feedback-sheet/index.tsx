@@ -2,15 +2,22 @@ import { useState } from 'react'
 import Taro from '@tarojs/taro'
 import { View, Text, Textarea } from '@tarojs/components'
 import { Network } from '@/network'
-import { X } from 'lucide-react-taro'
+import { X, Lightbulb, Package, Info } from 'lucide-react-taro'
 
 interface FeedbackSheetProps {
   open: boolean
   onClose: () => void
 }
 
+const typeOptions = [
+  { key: 'suggestion', label: '建议', color: 'blue', icon: Lightbulb },
+  { key: 'need', label: '需求', color: 'purple', icon: Package },
+  { key: 'problem', label: '问题', color: 'red', icon: Info },
+]
+
 export default function FeedbackSheet({ open, onClose }: FeedbackSheetProps) {
   const [content, setContent] = useState('')
+  const [type, setType] = useState('suggestion')
   const [loading, setLoading] = useState(false)
 
   if (!open) return null
@@ -30,16 +37,27 @@ export default function FeedbackSheet({ open, onClose }: FeedbackSheetProps) {
       await Network.request({
         url: '/api/feedback/submit',
         method: 'POST',
-        data: { content: content.trim() },
+        data: { content: content.trim(), type },
       })
       Taro.showToast({ title: '提交成功', icon: 'success' })
       setContent('')
+      setType('suggestion')
       onClose()
     } catch (err) {
       console.error('提交反馈失败', err)
       Taro.showToast({ title: '提交失败', icon: 'none' })
     } finally {
       setLoading(false)
+    }
+  }
+
+  const getColorClass = (color: string, isSelected: boolean) => {
+    if (!isSelected) return 'bg-gray-100 text-gray-600'
+    switch (color) {
+      case 'blue': return 'bg-blue-500 text-white'
+      case 'purple': return 'bg-purple-500 text-white'
+      case 'red': return 'bg-red-500 text-white'
+      default: return 'bg-blue-500 text-white'
     }
   }
 
@@ -60,6 +78,29 @@ export default function FeedbackSheet({ open, onClose }: FeedbackSheetProps) {
             onClick={onClose}
           >
             <X size={18} color="#666" />
+          </View>
+        </View>
+
+        {/* 类型选择 */}
+        <View className="mb-4">
+          <Text className="block text-sm text-gray-600 mb-2">反馈类型</Text>
+          <View className="flex gap-2">
+            {typeOptions.map((item) => {
+              const Icon = item.icon
+              const isSelected = type === item.key
+              return (
+                <View
+                  key={item.key}
+                  className={`flex-1 py-2 px-3 rounded-xl flex items-center justify-center gap-1 ${getColorClass(item.color, isSelected)}`}
+                  onClick={() => setType(item.key)}
+                >
+                  <Icon size={14} color={isSelected ? '#ffffff' : '#64748b'} />
+                  <Text className={`text-sm ${isSelected ? 'text-white' : 'text-gray-600'}`}>
+                    {item.label}
+                  </Text>
+                </View>
+              )
+            })}
           </View>
         </View>
         
