@@ -106,6 +106,7 @@ export class InspectionController {
     equipmentIds: number[];
     status: 'normal' | 'pending' | 'fault';
     remark?: string;
+    wearLevel?: string;
   }) {
     // 验证输入
     if (!body.inspector) {
@@ -123,6 +124,7 @@ export class InspectionController {
       area: body.area,
       status: body.status,
       remark: body.remark,
+      wearLevel: body.wearLevel,
       inspector: body.inspector,
     });
 
