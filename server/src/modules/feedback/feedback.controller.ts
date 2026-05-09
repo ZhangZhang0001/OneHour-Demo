@@ -84,4 +84,49 @@ export class FeedbackController {
       data: { count: result.count },
     }
   }
+
+  // 获取待处理数量
+  @Get('pending-count')
+  async pendingCount() {
+    console.log('GET /api/feedback/pending-count')
+
+    const result = await this.feedbackService.pendingCount()
+
+    return {
+      code: 200,
+      msg: 'success',
+      data: { count: result.count },
+    }
+  }
+
+  // 标记反馈为已处理
+  @Post('resolve')
+  async resolve(@Body() body: { id: number }) {
+    console.log('POST /api/feedback/resolve - id:', body.id)
+
+    if (!body.id) {
+      return {
+        code: 400,
+        msg: '缺少反馈ID',
+        data: null,
+      }
+    }
+
+    const result = await this.feedbackService.resolve(body.id)
+
+    if (result.error) {
+      console.error('Feedback resolve error:', result.error)
+      return {
+        code: 500,
+        msg: '操作失败',
+        data: null,
+      }
+    }
+
+    return {
+      code: 200,
+      msg: '已标记为处理',
+      data: result.data,
+    }
+  }
 }

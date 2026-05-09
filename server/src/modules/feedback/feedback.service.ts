@@ -11,6 +11,7 @@ export class FeedbackService {
       .insert({
         content: data.content,
         type: data.type || 'suggestion',
+        status: '0', // 待处理
       })
       .select()
       .single()
@@ -29,12 +30,37 @@ export class FeedbackService {
     return result
   }
 
+  // 标记反馈为已处理
+  async resolve(id: number) {
+    const client = getSupabaseClient()
+    const now = new Date().toISOString()
+    const result = await client
+      .from('feedback')
+      .update({ status: '1', handle_time: now })
+      .eq('id', id)
+      .select()
+      .single()
+
+    return result
+  }
+
   // 获取反馈数量
   async count() {
     const client = getSupabaseClient()
     const result = await client
       .from('feedback')
       .select('*', { count: 'exact', head: true })
+
+    return { count: result.count || 0 }
+  }
+
+  // 获取待处理数量
+  async pendingCount() {
+    const client = getSupabaseClient()
+    const result = await client
+      .from('feedback')
+      .select('*', { count: 'exact', head: true })
+      .eq('status', '0')
 
     return { count: result.count || 0 }
   }
