@@ -92,11 +92,19 @@ export default function TrainingUpload() {
       // 解析响应
       const responseData = result.data as { code?: number; msg?: string; data?: any }
       if (responseData.code === 200) {
-        Taro.showToast({ title: '上传成功', icon: 'success' })
-        // 上传成功后跳转到列表页，列表页会自动刷新显示新记录
+        Taro.showToast({ title: '上传成功', icon: 'success', duration: 1500 })
+        // 延迟跳转，让用户看到成功提示
         setTimeout(() => {
-          Taro.redirectTo({ url: '/pages/training/index' })
-        }, 1000)
+          Taro.navigateBack({
+            success: () => {
+              console.log('返回成功')
+            },
+            fail: () => {
+              // 如果返回失败，尝试跳转到列表页
+              Taro.reLaunch({ url: '/pages/training/index' })
+            }
+          })
+        }, 1500)
       } else {
         Taro.showToast({ title: responseData.msg || '上传失败', icon: 'none' })
       }
