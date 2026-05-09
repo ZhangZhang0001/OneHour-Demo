@@ -93,15 +93,18 @@ export default function TrainingUpload() {
       const responseData = result.data as { code?: number; msg?: string; data?: any }
       if (responseData.code === 200) {
         Taro.showToast({ title: '上传成功', icon: 'success' })
+        // 上传成功后跳转到列表页，列表页会自动刷新显示新记录
         setTimeout(() => {
-          Taro.navigateBack()
-        }, 1500)
+          Taro.redirectTo({ url: '/pages/training/index' })
+        }, 1000)
       } else {
         Taro.showToast({ title: responseData.msg || '上传失败', icon: 'none' })
       }
     } catch (err: any) {
       console.error('上传失败:', err)
-      Taro.showToast({ title: '上传失败: ' + (err.message || '请重试'), icon: 'none' })
+      // 显示详细错误信息
+      const errorMsg = err.message || '网络错误，请检查网络后重试'
+      Taro.showToast({ title: '上传失败: ' + errorMsg, icon: 'none', duration: 3000 })
     } finally {
       setUploading(false)
       Taro.hideLoading()
