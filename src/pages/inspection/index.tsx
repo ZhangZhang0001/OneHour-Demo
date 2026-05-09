@@ -46,9 +46,25 @@ export default function Inspection() {
     }
   }, [fetchRecords])
 
+  // 筛选记录：全部显示所有记录，状态筛选时每个器械只显示最新一条
   const filteredRecords = filterStatus === 'all' 
     ? records 
-    : records.filter(r => r.status === filterStatus)
+    : (() => {
+        // 按器械分组，每组只保留最新一条
+        const latestByEquipment: Record<string, typeof records[0]> = {}
+        // 倒序遍历，确保最新的记录被保留
+        const sortedRecords = [...records].sort((a, b) => 
+          new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+        )
+        for (const record of sortedRecords) {
+          if (record.status === filterStatus) {
+            if (!latestByEquipment[record.equipment_id]) {
+              latestByEquipment[record.equipment_id] = record
+            }
+          }
+        }
+        return Object.values(latestByEquipment)
+      })()
 
   const getStatusConfig = (status: string) => {
     switch (status) {
@@ -120,19 +136,49 @@ export default function Inspection() {
             </View>
             <View className="text-center">
               <Text className="block text-2xl font-bold text-green-600">
-                {records.filter(r => r.status === 'normal').length}
+                {(() => {
+                  const latestByEquipment: Record<string, typeof records[0]> = {}
+                  for (const record of [...records].sort((a, b) => 
+                    new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+                  )) {
+                    if (!latestByEquipment[record.equipment_id]) {
+                      latestByEquipment[record.equipment_id] = record
+                    }
+                  }
+                  return Object.values(latestByEquipment).filter(r => r.status === 'normal').length
+                })()}
               </Text>
               <Text className="block text-xs text-slate-500 mt-1">正常</Text>
             </View>
             <View className="text-center">
               <Text className="block text-2xl font-bold text-orange-600">
-                {records.filter(r => r.status === 'pending').length}
+                {(() => {
+                  const latestByEquipment: Record<string, typeof records[0]> = {}
+                  for (const record of [...records].sort((a, b) => 
+                    new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+                  )) {
+                    if (!latestByEquipment[record.equipment_id]) {
+                      latestByEquipment[record.equipment_id] = record
+                    }
+                  }
+                  return Object.values(latestByEquipment).filter(r => r.status === 'pending').length
+                })()}
               </Text>
               <Text className="block text-xs text-slate-500 mt-1">有磨损</Text>
             </View>
             <View className="text-center">
               <Text className="block text-2xl font-bold text-red-600">
-                {records.filter(r => r.status === 'fault').length}
+                {(() => {
+                  const latestByEquipment: Record<string, typeof records[0]> = {}
+                  for (const record of [...records].sort((a, b) => 
+                    new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+                  )) {
+                    if (!latestByEquipment[record.equipment_id]) {
+                      latestByEquipment[record.equipment_id] = record
+                    }
+                  }
+                  return Object.values(latestByEquipment).filter(r => r.status === 'fault').length
+                })()}
               </Text>
               <Text className="block text-xs text-slate-500 mt-1">故障</Text>
             </View>

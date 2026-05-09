@@ -132,8 +132,72 @@ export class InspectionService {
   }
 
   // 获取今日巡检记录（用于器械巡检页面）
+  // 当指定status时，返回每个器械在该状态下的最新一条记录
+  // 当不指定status时，返回所有记录
   async getTodayInspectionList(area?: string, status?: string) {
     const todayDate = this.getToday();
+    
+    // 如果指定了状态，只返回每个器械在该状态下的最新一条记录
+    if (status) {
+      // 使用子查询获取每个器械在指定状态下的最新记录ID
+      const { data: latestIds, error: subError } = await this.supabase
+        .from('equipment_inspections')
+        .select('id')
+        .eq('inspection_date', todayDate)
+        .eq('status', status)
+        .order('created_at', { ascending: false });
+
+      if (subError) {
+        console.error('获取最新记录失败:', subError);
+        return [];
+      }
+
+      if (!latestIds || latestIds.length === 0) {
+        return [];
+      }
+
+      // 获取每个器械的最新一条记录
+      const seenEquipmentIds = new Set<number>();
+      const latestRecordIds: number[] = [];
+
+      for (const record of latestIds) {
+        // 需要获取完整记录来检查 equipment_id
+        const { data: recordData } = await this.supabase
+          .from('equipment_inspections')
+          .select('*')
+          .eq('id', record.id)
+          .single();
+        
+        if (recordData && !seenEquipmentIds.has(recordData.equipment_id)) {
+          seenEquipmentIds.add(recordData.equipment_id);
+          latestRecordIds.push(recordData.id);
+        }
+      }
+
+      if (latestRecordIds.length === 0) {
+        return [];
+      }
+
+      const { data: finalResult, error: finalError } = await this.supabase
+        .from('equipment_inspections')
+        .select('*')
+        .in('id', latestRecordIds)
+        .order('created_at', { ascending: false });
+
+      if (finalError) {
+        console.error('获取最终结果失败:', finalError);
+        return [];
+      }
+
+      // 如果指定了区域，再过滤一次
+      if (area) {
+        return (finalResult || []).filter(r => r.area === area);
+      }
+
+      return finalResult || [];
+    }
+
+    // 不指定状态，返回所有记录
     let query = this.supabase
       .from('equipment_inspections')
       .select('*')
@@ -142,9 +206,6 @@ export class InspectionService {
 
     if (area) {
       query = query.eq('area', area);
-    }
-    if (status) {
-      query = query.eq('status', status);
     }
 
     const result = await query;
