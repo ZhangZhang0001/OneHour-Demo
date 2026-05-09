@@ -123,4 +123,29 @@ export class TrainingController {
       throw new Error('生成预览链接失败');
     }
   }
+
+  // 批量删除培训资料
+  @Post('batch-delete')
+  async batchDelete(@Body() body: { ids: number[] }) {
+    const client = getSupabaseClient();
+    
+    console.log('批量删除培训资料 - ids:', body.ids);
+    
+    if (!body.ids || body.ids.length === 0) {
+      return { code: 400, msg: '请选择要删除的记录', data: null };
+    }
+    
+    // 从数据库删除记录
+    const { error } = await client
+      .from('training_materials')
+      .delete()
+      .in('id', body.ids);
+    
+    if (error) {
+      console.error('批量删除培训资料失败:', error);
+      return { code: 500, msg: `删除失败: ${error.message}`, data: null };
+    }
+    
+    return { code: 200, msg: `成功删除 ${body.ids.length} 条培训资料`, data: null };
+  }
 }
