@@ -120,7 +120,7 @@ export default function Training() {
             <Text className="block text-sm text-slate-500 mt-1">教练学习手册与培训资料</Text>
           </View>
           <View 
-            className="px-3 py-2 bg-blue-500 text-white text-sm rounded-lg"
+            className="px-3 py-2 bg-primary text-primary-foreground text-sm rounded-lg"
             onClick={() => {
               if (isSelecting) {
                 handleCancelSelect()
