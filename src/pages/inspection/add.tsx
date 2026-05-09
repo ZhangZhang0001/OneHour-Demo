@@ -325,7 +325,7 @@ export default function AddInspection() {
                     <Text className={`block font-medium ${wearLevel === item.key ? 'text-white' : 'text-gray-700'}`}>
                       {item.label}
                     </Text>
-                    <Text className={`block text-xs mt-1 ${wearLevel === item.key ? 'text-white/80' : 'text-gray-400'}`}>
+                    <Text className={`block text-xs mt-1 ${wearLevel === item.key ? 'text-white opacity-80' : 'text-gray-400'}`}>
                       {item.desc}
                     </Text>
                   </View>
