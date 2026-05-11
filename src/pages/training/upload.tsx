@@ -48,7 +48,12 @@ export default function TrainingUpload() {
           })
           
           // 自动提取文件名（不含扩展名）填入标题
-          const fileNameWithoutExt = file.name.substring(0, file.name.lastIndexOf('.')) || file.name
+          const lastDotIndex = file.name.lastIndexOf('.')
+          const extension = lastDotIndex > 0 ? file.name.substring(lastDotIndex) : ''
+          const hasKnownExtension = ['.pdf', '.doc', '.docx', '.ppt', '.pptx', '.xls', '.xlsx', '.txt', '.jpg', '.jpeg', '.png', '.mp4'].includes(extension.toLowerCase())
+          const fileNameWithoutExt = hasKnownExtension 
+            ? file.name.substring(0, lastDotIndex).trim() 
+            : file.name.trim()
           setTitle(fileNameWithoutExt)
           
           Taro.showToast({ title: '已选择: ' + file.name, icon: 'none', duration: 2000 })
