@@ -24,17 +24,6 @@ export default function TrainingUpload() {
     return (bytes / (1024 * 1024)).toFixed(1) + ' MB'
   }
 
-  // 自动提取文件名（不含扩展名）填入标题
-  const autoFillTitle = (fileName: string) => {
-    const lastDotIndex = fileName.lastIndexOf('.')
-    const extension = lastDotIndex > 0 ? fileName.substring(lastDotIndex) : ''
-    const hasKnownExtension = ['.pdf', '.doc', '.docx', '.ppt', '.pptx', '.xls', '.xlsx', '.txt', '.jpg', '.jpeg', '.png', '.mp4'].includes(extension.toLowerCase())
-    const fileNameWithoutExt = hasKnownExtension 
-      ? fileName.substring(0, lastDotIndex).trim() 
-      : fileName.trim()
-    setTitle(fileNameWithoutExt)
-  }
-
   // 处理 H5 文件选择
   const handleH5FileChange = (e: any) => {
     const file = e.target.files?.[0]
@@ -42,50 +31,46 @@ export default function TrainingUpload() {
       console.log('H5 选择文件:', file.name, file.size)
       setSelectedFile({
         name: file.name,
-        path: file.name, // H5 下使用文件名作为标识
+        path: file.name,
         size: file.size
       })
-      autoFillTitle(file.name)
+      // 直接把文件名填入标题
+      setTitle(file.name)
       Taro.showToast({ title: '已选择: ' + file.name, icon: 'none', duration: 2000 })
     }
-  }
-
-  // 触发 H5 文件选择
-  const triggerH5FileSelect = () => {
-    fileInputRef.current?.click()
   }
 
   const handleSelectFile = () => {
     console.log('点击选择文件, isMiniApp:', isMiniApp, 'envType:', envType)
 
-    if (!isMiniApp) {
-      // H5 环境：触发原生文件选择
-      triggerH5FileSelect()
-      return
-    }
-
     try {
-      // 小程序端使用 chooseMessageFile
-      Taro.chooseMessageFile({
-        count: 1,
-        type: 'file',
-        extension: ['pdf', 'doc', 'docx', 'ppt', 'pptx', 'xls', 'xlsx', 'txt', 'jpg', 'jpeg', 'png', 'mp4']
-      }).then(res => {
-        console.log('选择文件结果:', res)
-        if (res.tempFiles && res.tempFiles.length > 0) {
-          const file = res.tempFiles[0]
-          setSelectedFile({
-            name: file.name,
-            path: file.path,
-            size: file.size
-          })
-          autoFillTitle(file.name)
-          Taro.showToast({ title: '已选择: ' + file.name, icon: 'none', duration: 2000 })
-        }
-      }).catch(err => {
-        console.error('选择文件失败:', err)
-        Taro.showToast({ title: '选择文件失败: ' + (err.errMsg || '未知错误'), icon: 'none' })
-      })
+      if (isMiniApp) {
+        // 小程序端使用 chooseMessageFile
+        Taro.chooseMessageFile({
+          count: 1,
+          type: 'file',
+          extension: ['pdf', 'doc', 'docx', 'ppt', 'pptx', 'xls', 'xlsx', 'txt', 'jpg', 'jpeg', 'png', 'mp4']
+        }).then(res => {
+          console.log('选择文件结果:', res)
+          if (res.tempFiles && res.tempFiles.length > 0) {
+            const file = res.tempFiles[0]
+            setSelectedFile({
+              name: file.name,
+              path: file.path,
+              size: file.size
+            })
+            // 直接把文件名填入标题
+            setTitle(file.name)
+            Taro.showToast({ title: '已选择: ' + file.name, icon: 'none', duration: 2000 })
+          }
+        }).catch(err => {
+          console.error('选择文件失败:', err)
+          Taro.showToast({ title: '选择文件失败', icon: 'none' })
+        })
+      } else {
+        // H5 环境：触发原生文件选择
+        fileInputRef.current?.click()
+      }
     } catch (err: any) {
       console.error('选择文件异常:', err)
       Taro.showToast({ title: '选择文件失败', icon: 'none' })
