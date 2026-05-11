@@ -46,6 +46,11 @@ export default function TrainingUpload() {
             path: file.path,
             size: file.size
           })
+          
+          // 自动提取文件名（不含扩展名）填入标题
+          const fileNameWithoutExt = file.name.substring(0, file.name.lastIndexOf('.')) || file.name
+          setTitle(fileNameWithoutExt)
+          
           Taro.showToast({ title: '已选择: ' + file.name, icon: 'none', duration: 2000 })
         }
       }).catch(err => {
