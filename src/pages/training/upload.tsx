@@ -1,10 +1,10 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { View, Text } from '@tarojs/components'
 import Taro from '@tarojs/taro'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
-import { Upload, X, FileText, Plus } from 'lucide-react-taro'
+import { X, FileText, Plus } from 'lucide-react-taro'
 import { Network } from '@/network'
 
 export default function TrainingUpload() {
@@ -12,6 +12,7 @@ export default function TrainingUpload() {
   const [description, setDescription] = useState('')
   const [selectedFile, setSelectedFile] = useState<{ name: string; path: string; size: number } | null>(null)
   const [uploading, setUploading] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   // 检测是否是小程序环境
   const envType = Taro.getEnv()
@@ -23,11 +24,43 @@ export default function TrainingUpload() {
     return (bytes / (1024 * 1024)).toFixed(1) + ' MB'
   }
 
+  // 自动提取文件名（不含扩展名）填入标题
+  const autoFillTitle = (fileName: string) => {
+    const lastDotIndex = fileName.lastIndexOf('.')
+    const extension = lastDotIndex > 0 ? fileName.substring(lastDotIndex) : ''
+    const hasKnownExtension = ['.pdf', '.doc', '.docx', '.ppt', '.pptx', '.xls', '.xlsx', '.txt', '.jpg', '.jpeg', '.png', '.mp4'].includes(extension.toLowerCase())
+    const fileNameWithoutExt = hasKnownExtension 
+      ? fileName.substring(0, lastDotIndex).trim() 
+      : fileName.trim()
+    setTitle(fileNameWithoutExt)
+  }
+
+  // 处理 H5 文件选择
+  const handleH5FileChange = (e: any) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      console.log('H5 选择文件:', file.name, file.size)
+      setSelectedFile({
+        name: file.name,
+        path: file.name, // H5 下使用文件名作为标识
+        size: file.size
+      })
+      autoFillTitle(file.name)
+      Taro.showToast({ title: '已选择: ' + file.name, icon: 'none', duration: 2000 })
+    }
+  }
+
+  // 触发 H5 文件选择
+  const triggerH5FileSelect = () => {
+    fileInputRef.current?.click()
+  }
+
   const handleSelectFile = () => {
     console.log('点击选择文件, isMiniApp:', isMiniApp, 'envType:', envType)
 
     if (!isMiniApp) {
-      Taro.showToast({ title: '请在微信/抖音小程序中使用', icon: 'none', duration: 3000 })
+      // H5 环境：触发原生文件选择
+      triggerH5FileSelect()
       return
     }
 
@@ -46,16 +79,7 @@ export default function TrainingUpload() {
             path: file.path,
             size: file.size
           })
-          
-          // 自动提取文件名（不含扩展名）填入标题
-          const lastDotIndex = file.name.lastIndexOf('.')
-          const extension = lastDotIndex > 0 ? file.name.substring(lastDotIndex) : ''
-          const hasKnownExtension = ['.pdf', '.doc', '.docx', '.ppt', '.pptx', '.xls', '.xlsx', '.txt', '.jpg', '.jpeg', '.png', '.mp4'].includes(extension.toLowerCase())
-          const fileNameWithoutExt = hasKnownExtension 
-            ? file.name.substring(0, lastDotIndex).trim() 
-            : file.name.trim()
-          setTitle(fileNameWithoutExt)
-          
+          autoFillTitle(file.name)
           Taro.showToast({ title: '已选择: ' + file.name, icon: 'none', duration: 2000 })
         }
       }).catch(err => {
@@ -77,6 +101,12 @@ export default function TrainingUpload() {
     }
     if (!selectedFile) {
       Taro.showToast({ title: '请先选择要上传的文件', icon: 'none' })
+      return
+    }
+
+    // H5 环境暂不支持上传
+    if (!isMiniApp) {
+      Taro.showToast({ title: '文件上传仅支持小程序环境', icon: 'none', duration: 3000 })
       return
     }
 
@@ -133,102 +163,97 @@ export default function TrainingUpload() {
 
   return (
     <View className="min-h-screen bg-gray-50 p-4">
+      {/* H5 隐藏的文件输入框 */}
+      {!isMiniApp && (
+        <View style={{ display: 'none' }}>
+          <input
+            ref={fileInputRef as any}
+            type="file"
+            accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.txt,.jpg,.jpeg,.png,.mp4"
+            onChange={handleH5FileChange}
+          />
+        </View>
+      )}
+
       {/* 页面标题 */}
       <View className="mb-6">
         <Text className="block text-xl font-bold text-gray-800">上传培训资料</Text>
         <Text className="block text-sm text-gray-500 mt-1">支持 PDF、Word、Excel、图片、视频等格式</Text>
       </View>
 
-      {/* 文件选择区域 */}
-      <View className="mb-4">
-        <Text className="block text-base font-medium text-gray-700 mb-2">选择文件 *</Text>
-        {selectedFile ? (
-          <View className="bg-white rounded-xl p-4 border border-gray-200">
-            <View className="flex items-center justify-between">
-              <View className="flex items-center flex-1">
-                <FileText size={24} color="#3b82f6" />
-                <View className="flex-1 ml-3">
-                  <Text className="block text-sm font-medium text-gray-800 truncate">{selectedFile.name}</Text>
-                  <Text className="block text-xs text-gray-500 mt-1">{formatFileSize(selectedFile.size)}</Text>
-                </View>
-              </View>
-              <View 
-                className="ml-3 p-2"
-                onClick={() => {
-                  setSelectedFile(null)
-                  Taro.showToast({ title: '已取消选择', icon: 'none' })
-                }}
-              >
-                <X size={20} color="#9ca3af" />
-              </View>
-            </View>
-          </View>
-        ) : (
-          <View 
-            className="bg-white rounded-xl border-2 border-dashed border-gray-300 p-8 flex flex-col items-center justify-center"
-            onClick={handleSelectFile}
-          >
-            <Upload size={32} color="#9ca3af" />
-            <Text className="block text-sm text-gray-500 mt-2">点击选择文件</Text>
-            <Text className="block text-xs text-gray-400 mt-1">PDF/Word/Excel/图片/视频</Text>
-            {!isMiniApp && (
-              <Text className="block text-xs text-amber-500 mt-2">（小程序专享）</Text>
-            )}
-          </View>
-        )}
-      </View>
-
       {/* 标题输入 */}
       <View className="mb-4">
-        <Text className="block text-base font-medium text-gray-700 mb-2">资料标题 *</Text>
-        <View className="bg-white rounded-xl px-4 py-3 border border-gray-200">
+        <Text className="block text-sm font-medium text-gray-700 mb-2">资料标题</Text>
+        <View className="bg-white rounded-xl px-4 py-3">
           <Input
-            className="w-full"
+            className="w-full text-base"
             placeholder="请输入资料标题"
             value={title}
-            onInput={(e) => setTitle(e.detail.value)}
+            onInput={(e: any) => setTitle(e.detail?.value || e.target?.value || title)}
             maxlength={100}
           />
         </View>
-        <Text className="block text-xs text-gray-400 mt-1 text-right">{title.length}/100</Text>
       </View>
 
       {/* 描述输入 */}
-      <View className="mb-6">
-        <Text className="block text-base font-medium text-gray-700 mb-2">资料描述</Text>
-        <View className="bg-white rounded-xl p-4 border border-gray-200">
+      <View className="mb-4">
+        <Text className="block text-sm font-medium text-gray-700 mb-2">资料描述</Text>
+        <View className="bg-white rounded-xl p-4">
           <Textarea
             style={{ width: '100%', minHeight: '100px', backgroundColor: 'transparent' }}
             placeholder="请输入资料描述（选填）"
             value={description}
-            onInput={(e) => setDescription(e.detail.value)}
+            onInput={(e: any) => setDescription(e.detail?.value || e.target?.value || description)}
             maxlength={500}
           />
         </View>
-        <Text className="block text-xs text-gray-400 mt-1 text-right">{description.length}/500</Text>
       </View>
 
-      {/* 提交按钮 */}
-      <View className="mt-4">
+      {/* 文件选择 */}
+      <View className="mb-6">
+        <Text className="block text-sm font-medium text-gray-700 mb-2">选择文件</Text>
+        
+        {selectedFile ? (
+          // 已选择文件显示
+          <View className="bg-white rounded-xl p-4 flex flex-row items-center">
+            <View className="w-12 h-12 bg-blue-50 rounded-lg flex items-center justify-center mr-3">
+              <FileText size={24} color="#3B82F6" />
+            </View>
+            <View className="flex-1">
+              <Text className="block text-base font-medium text-gray-800 truncate">{selectedFile.name}</Text>
+              <Text className="block text-sm text-gray-500 mt-1">{formatFileSize(selectedFile.size)}</Text>
+            </View>
+            <View 
+              onClick={() => setSelectedFile(null)}
+              className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center ml-2"
+            >
+              <X size={16} color="#6B7280" />
+            </View>
+          </View>
+        ) : (
+          // 未选择文件显示
+          <View 
+            onClick={handleSelectFile}
+            className="bg-white rounded-xl border-2 border-dashed border-gray-200 p-6 flex flex-col items-center justify-center"
+          >
+            <View className="w-12 h-12 bg-gray-50 rounded-full flex items-center justify-center mb-3">
+              <Plus size={24} color="#6B7280" />
+            </View>
+            <Text className="block text-sm text-gray-500">点击选择文件</Text>
+            <Text className="block text-xs text-gray-400 mt-1">支持 PDF、Word、Excel、图片、视频</Text>
+          </View>
+        )}
+      </View>
+
+      {/* 上传按钮 */}
+      <View className="mt-8">
         <Button 
-          className="w-full bg-blue-600 hover:bg-blue-700 text-white py-4 rounded-xl text-base font-medium"
-          onClick={handleUpload}
+          onClick={handleUpload} 
           disabled={uploading}
+          className="w-full bg-primary text-white"
         >
-          <Plus size={18} color="#ffffff" />
-          <Text className="ml-2 text-white">{uploading ? '上传中...' : '确认上传'}</Text>
+          {uploading ? '上传中...' : '确认上传'}
         </Button>
-      </View>
-
-      {/* 提示信息 */}
-      <View className="mt-6 bg-blue-50 rounded-xl p-4">
-        <Text className="block text-sm text-blue-700">
-          上传说明：{'\n'}
-          1. 支持 PDF、Word、Excel、图片、视频等格式{'\n'}
-          2. 文件大小建议不超过 50MB{'\n'}
-          3. 请确保填写资料标题{'\n'}
-          {!isMiniApp && '4. 此功能仅在小程序中可用'}
-        </Text>
       </View>
     </View>
   )
